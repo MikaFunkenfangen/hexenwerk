@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="deepwater" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#304048"/>
+      <stop offset="30%" stop-color="#263640"/>
+      <stop offset="70%" stop-color="#1a2830"/>
+      <stop offset="100%" stop-color="#101820"/>
+    </linearGradient>
+    <filter id="deepripple">
+      <feTurbulence type="turbulence" baseFrequency="0.015 0.15" numOctaves="2"/>
+      <feColorMatrix values="0 0 0 0 0.18  0 0 0 0 0.26  0 0 0 0 0.3  0 0 0 0.28 0"/>
+    </filter>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#deepwater)"/>
+  <rect width="1920" height="1080" filter="url(#deepripple)" opacity="0.5"/>
+</svg>

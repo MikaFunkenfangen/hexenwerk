@@ -1,0 +1,578 @@
+/* ============================================================
+   HEXENÄSTHETIKEN – Motion Engine
+   Editorial motion design: slow, cinematic, intentional.
+
+   Four motion layers:
+   1. ATMOSPHERE (static with slow self-movement)
+   2. BACKGROUND (parallax, 0.2–0.3× scroll)
+   3. FOREGROUND (normal scroll, with reveal staging)
+   4. REACTION (event-driven: hover, scroll, cursor)
+
+   Dependencies: none. Native IntersectionObserver + rAF only.
+   ============================================================ */
+
+(function () {
+    'use strict';
+
+    /* -------- Environment flags -------- */
+    const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const IS_MOBILE = window.matchMedia('(max-width: 640px)').matches;
+
+
+    /* ============================================================
+       1. SCROLL REVEALS – staggered, proportional to position
+       Each section's children animate in with slight offsets.
+       Uses data-reveal-delay to allow author-set timing.
+       ============================================================ */
+    function initReveals() {
+        const elements = document.querySelectorAll('.reveal');
+        if (!elements.length) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+
+                    const el = entry.target;
+                    // Stagger siblings within the same parent
+                    const siblings = Array.from(el.parentElement.children)
+                        .filter(c => c.classList.contains('reveal'));
+                    const index = siblings.indexOf(el);
+                    const delay = Math.min(index * 80, 240); // cap at 240ms
+
+                    el.style.transitionDelay = `${delay}ms`;
+                    el.classList.add('is-visible');
+                    observer.unobserve(el);
+                });
+            },
+            {
+                threshold: 0.12,
+                rootMargin: '0px 0px -80px 0px'
+            }
+        );
+
+        elements.forEach(el => observer.observe(el));
+    }
+
+
+    /* ============================================================
+       2. PARALLAX – smooth lerped motion on hero backgrounds
+       Uses linear interpolation for buttery movement, not
+       instant scroll-tied position. Coefficient: 0.15 (subtle).
+       ============================================================ */
+    function initParallax() {
+        if (REDUCED_MOTION || IS_MOBILE) return;
+
+        const targets = [
+            document.getElementById('heroBg'),
+            document.getElementById('essayHeroBg')
+        ].filter(Boolean);
+
+        if (!targets.length) return;
+
+        // Store current and target positions for each element
+        const state = targets.map(el => ({
+            el,
+            current: 0,
+            target: 0
+        }));
+
+        function updateTargets() {
+            const scrollY = window.scrollY;
+            state.forEach(s => {
+                const rect = s.el.parentElement.getBoundingClientRect();
+                if (rect.bottom < -200 || rect.top > window.innerHeight + 200) return;
+                // Subtle coefficient: 0.15 — slower than foreground
+                s.target = scrollY * 0.15;
+            });
+        }
+
+        function animate() {
+            state.forEach(s => {
+                // Lerp towards target for smoothness
+                s.current += (s.target - s.current) * 0.1;
+                // Round to avoid sub-pixel blur
+                const y = Math.round(s.current * 100) / 100;
+                s.el.style.transform = `translate3d(0, ${y}px, 0)`;
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('scroll', updateTargets, { passive: true });
+        window.addEventListener('resize', updateTargets, { passive: true });
+        updateTargets();
+        animate();
+    }
+
+
+    /* ============================================================
+       3. HERO FADE – extended progression over 70vh
+       Title fades AND drifts upward as user scrolls away.
+       Scroll-hint disappears faster (first 20vh).
+       ============================================================ */
+    function initHeroFade() {
+        const heroInner = document.querySelector('.hero-inner');
+        const scrollHint = document.querySelector('.hero-scroll-hint');
+        const heroOverlay = document.querySelector('.hero-overlay');
+        if (!heroInner) return;
+
+        let ticking = false;
+        function update() {
+            const scrollY = window.scrollY;
+            const vh = window.innerHeight;
+
+            // Extended fade: 0 → 0.7vh instead of 0 → 0.5vh
+            const progress = Math.min(scrollY / (vh * 0.7), 1);
+            // Eased curve: slow start, then accelerating fade
+            const eased = progress * progress;
+
+            heroInner.style.opacity = String(1 - eased * 0.9);
+            heroInner.style.transform = `translate3d(0, ${eased * -40}px, 0)`;
+
+            if (scrollHint) {
+                const hintProgress = Math.min(scrollY / (vh * 0.2), 1);
+                scrollHint.style.opacity = String(Math.max(0, 1 - hintProgress));
+            }
+
+            // Overlay intensifies slightly as user scrolls
+            if (heroOverlay) {
+                heroOverlay.style.opacity = String(1 + progress * 0.15);
+            }
+
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(update);
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+
+
+    /* ============================================================
+       4. NAV – compacts on scroll (existing behavior, refined)
+       Transition duration bumped for smoother feel.
+       ============================================================ */
+    function initNavScroll() {
+        const nav = document.querySelector('.site-nav');
+        if (!nav || nav.classList.contains('site-nav--essay')) return;
+
+        let ticking = false;
+        function update() {
+            const scrolled = window.scrollY > 80;
+            nav.classList.toggle('is-scrolled', scrolled);
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(update);
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+
+
+    /* ============================================================
+       5. CURSOR LIGHT – Desktop only, hero only
+       Very subtle radial glow that follows the cursor in the hero.
+       Amplifies the sense of "something is there", without drama.
+       Opacity capped at 0.08.
+       ============================================================ */
+    function initCursorLight() {
+        if (REDUCED_MOTION || IS_TOUCH || IS_MOBILE) return;
+
+        const hero = document.querySelector('.hero');
+        if (!hero) return;
+
+        // Create light element
+        const light = document.createElement('div');
+        light.className = 'hero-cursor-light';
+        hero.appendChild(light);
+
+        let currentX = 50, currentY = 50;
+        let targetX = 50, targetY = 50;
+        let active = false;
+
+        hero.addEventListener('mouseenter', () => {
+            active = true;
+            light.style.opacity = '1';
+        });
+
+        hero.addEventListener('mouseleave', () => {
+            active = false;
+            light.style.opacity = '0';
+        });
+
+        hero.addEventListener('mousemove', (e) => {
+            const rect = hero.getBoundingClientRect();
+            targetX = ((e.clientX - rect.left) / rect.width) * 100;
+            targetY = ((e.clientY - rect.top) / rect.height) * 100;
+        });
+
+        function animate() {
+            if (active) {
+                // Slow lerp for trailing effect
+                currentX += (targetX - currentX) * 0.05;
+                currentY += (targetY - currentY) * 0.05;
+                light.style.background = `radial-gradient(
+                    circle 320px at ${currentX}% ${currentY}%,
+                    rgba(212, 160, 49, 0.08) 0%,
+                    transparent 70%
+                )`;
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+
+    /* ============================================================
+       6. FULL-BLEED IMAGE BREATHING
+       Subtle scale movement while image is in viewport.
+       Tied to scroll position, not to time.
+       Creates "living image" feel without zoom effects.
+       ============================================================ */
+    function initImageBreathing() {
+        if (REDUCED_MOTION) return;
+
+        const images = document.querySelectorAll('.essay-fullbleed-img');
+        if (!images.length) return;
+
+        const state = Array.from(images).map(img => ({ img, offset: 0 }));
+
+        let ticking = false;
+        function update() {
+            const vh = window.innerHeight;
+
+            state.forEach(s => {
+                const rect = s.img.getBoundingClientRect();
+                if (rect.bottom < 0 || rect.top > vh) return;
+
+                // Progress: 0 when image enters bottom, 1 when exits top
+                const progress = 1 - (rect.top + rect.height / 2) / vh;
+                // Very subtle vertical drift: ±12px over full passage
+                const drift = (progress - 0.5) * 24;
+                s.img.style.transform = `translate3d(0, ${drift}px, 0) scale(1.04)`;
+            });
+
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(update);
+                ticking = true;
+            }
+        }, { passive: true });
+
+        update();
+    }
+
+
+    /* ============================================================
+       7. SMOOTH ANCHORS
+       ============================================================ */
+    function initSmoothAnchors() {
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href === '#' || href.length < 2) return;
+                const target = document.querySelector(href);
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    }
+
+
+    /* ============================================================
+       8. PROGRESSIVE IMAGE LOADING
+       Fade-in for hero/full-bleed images when loaded.
+       SVGs may report naturalHeight === 0, so we check
+       img.complete as a sufficient condition.
+       ============================================================ */
+    function initImageLoading() {
+        const images = document.querySelectorAll(
+            '.hero-bg-img, .essay-hero-img, .essay-fullbleed-img'
+        );
+        images.forEach(img => {
+            if (img.complete) {
+                img.classList.add('is-loaded');
+                return;
+            }
+            img.addEventListener('load', () => {
+                img.classList.add('is-loaded');
+            });
+            img.addEventListener('error', () => {
+                // Still show the image area even if load fails
+                img.classList.add('is-loaded');
+            });
+        });
+    }
+
+
+    /* ============================================================
+       9. MOBILE NAV TOGGLE
+       Hamburger menu for small screens.
+       ============================================================ */
+    function initNavToggle() {
+        const toggle = document.querySelector('.nav-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        if (!toggle || !navLinks) return;
+
+        toggle.addEventListener('click', () => {
+            const expanded = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', String(!expanded));
+            toggle.setAttribute('aria-label', expanded ? 'Menü öffnen' : 'Menü schließen');
+            navLinks.classList.toggle('is-open', !expanded);
+        });
+
+        // Close on link click
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-label', 'Menü öffnen');
+                navLinks.classList.remove('is-open');
+            });
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navLinks.classList.contains('is-open')) {
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-label', 'Menü öffnen');
+                navLinks.classList.remove('is-open');
+                toggle.focus();
+            }
+        });
+    }
+
+
+    /* ============================================================
+       10. HERO SPLIT TEXT — per-character entrance
+       Wraps each letter in a <span> with staggered delay.
+       ============================================================ */
+    function initHeroSplitText() {
+        if (REDUCED_MOTION || IS_MOBILE) return;
+
+        const title = document.querySelector('.hero-title');
+        if (!title) return;
+
+        // Get raw text, strip the soft-hyphen entity
+        const text = title.textContent.replace(/\u00AD/g, '');
+        title.innerHTML = '';
+        title.classList.add('is-split');
+
+        let charIndex = 0;
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            const span = document.createElement('span');
+            span.className = 'hero-char';
+
+            if (ch === ' ' || ch === '\n') {
+                span.classList.add('hero-char--space');
+                span.innerHTML = '&nbsp;';
+            } else {
+                span.textContent = ch;
+            }
+
+            // Stagger: 40ms per char, base delay 400ms
+            span.style.animationDelay = `${400 + charIndex * 40}ms`;
+            title.appendChild(span);
+            charIndex++;
+        }
+    }
+
+
+    /* ============================================================
+       11. SCROLL MARQUEE — horizontal text driven by scroll
+       Moves the track left/right based on scroll position.
+       ============================================================ */
+    function initScrollMarquee() {
+        if (REDUCED_MOTION) return;
+
+        const track = document.querySelector('.scroll-marquee-track');
+        if (!track) return;
+
+        let ticking = false;
+        function update() {
+            const scrollY = window.scrollY;
+            // Move left as user scrolls down. Speed factor: 0.3
+            const x = -(scrollY * 0.3);
+            track.style.transform = `translate3d(${x}px, 0, 0)`;
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(update);
+                ticking = true;
+            }
+        }, { passive: true });
+
+        update();
+    }
+
+
+    /* ============================================================
+       12. SECTION NUMBERS — oversized decorative parallax numbers
+       Creates a <span> from data-section-number attribute.
+       ============================================================ */
+    function initSectionNumbers() {
+        if (REDUCED_MOTION) return;
+
+        const sections = document.querySelectorAll('[data-section-number]');
+        if (!sections.length) return;
+
+        const state = [];
+        sections.forEach(section => {
+            const num = section.getAttribute('data-section-number');
+            const el = document.createElement('span');
+            el.className = 'section-number-deco';
+            el.textContent = num;
+            el.setAttribute('aria-hidden', 'true');
+            section.appendChild(el);
+            state.push({ section, el, current: 0, target: 0 });
+        });
+
+        let ticking = false;
+        function update() {
+            const vh = window.innerHeight;
+            state.forEach(s => {
+                const rect = s.section.getBoundingClientRect();
+                if (rect.bottom < -200 || rect.top > vh + 200) return;
+
+                // Parallax: number moves at 0.08× scroll speed relative to section
+                const sectionTop = rect.top;
+                s.target = sectionTop * -0.08;
+            });
+            ticking = false;
+        }
+
+        function animate() {
+            state.forEach(s => {
+                s.current += (s.target - s.current) * 0.06;
+                const y = Math.round(s.current * 10) / 10;
+                s.el.style.transform = `translate3d(0, ${y}px, 0)`;
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(update);
+                ticking = true;
+            }
+        }, { passive: true });
+
+        update();
+        animate();
+    }
+
+
+    /* ============================================================
+       13. SCROLL SCALE — Perspectives grid zoom-in
+       Also handles card alignment on scroll.
+       ============================================================ */
+    function initScrollEffects() {
+        if (REDUCED_MOTION) return;
+
+        // --- Perspectives scale ---
+        const perspList = document.querySelector('.perspectives-list');
+
+        // --- Card alignment ---
+        const cards = document.querySelectorAll('.essay-card:nth-child(n+2)');
+
+        if (!perspList && !cards.length) return;
+
+        const perspObserver = perspList ? new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        perspList.classList.add('is-scaled');
+                    }
+                });
+            },
+            { threshold: 0.3 }
+        ) : null;
+
+        if (perspObserver && perspList) {
+            perspObserver.observe(perspList);
+        }
+
+        // Card alignment observer
+        if (cards.length) {
+            const cardObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-aligned');
+                            cardObserver.unobserve(entry.target);
+                        }
+                    });
+                },
+                { threshold: 0.4 }
+            );
+            cards.forEach(card => cardObserver.observe(card));
+        }
+    }
+
+
+    /* ============================================================
+       14. FOCUS BACKDROP PARALLAX — "HEXE" text movement
+       ============================================================ */
+    function initFocusBackdrop() {
+        if (REDUCED_MOTION || IS_MOBILE) return;
+
+        const focusInner = document.querySelector('.focus-inner');
+        if (!focusInner) return;
+
+        let ticking = false;
+        function update() {
+            const rect = focusInner.getBoundingClientRect();
+            const vh = window.innerHeight;
+            if (rect.bottom < 0 || rect.top > vh) { ticking = false; return; }
+
+            const progress = (vh - rect.top) / (vh + rect.height);
+            // Drift the ::before pseudo via CSS custom property
+            const y = (progress - 0.5) * 60;
+            focusInner.style.setProperty('--backdrop-y', `${y}px`);
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(update);
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+
+
+    /* ============================================================
+       INIT
+       ============================================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+        initHeroSplitText();
+        initReveals();
+        initParallax();
+        initHeroFade();
+        initNavScroll();
+        initCursorLight();
+        initImageBreathing();
+        initSmoothAnchors();
+        initImageLoading();
+        initNavToggle();
+        initScrollMarquee();
+        initSectionNumbers();
+        initScrollEffects();
+        initFocusBackdrop();
+    });
+
+})();

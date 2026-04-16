@@ -1,0 +1,12 @@
+# Original loose SVGs (copies live in assets/)
+essay-01-*.svg
+essay-02-*.svg
+essay-03-*.svg
+hero-forest-fog.svg
+
+# Strategy & internal docs
+content-strategie.md
+README.md
+
+# OS
+.DS_Store
