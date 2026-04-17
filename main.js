@@ -440,55 +440,9 @@
        Moves the track left/right based on scroll position.
        ============================================================ */
     function initScrollMarquee() {
-        if (REDUCED_MOTION) return;
-
-        const marquees = [...document.querySelectorAll('.scroll-marquee')];
-        if (!marquees.length) return;
-
-        let ticking = false;
-        function update() {
-            const scrollY = window.scrollY;
-            const vh = window.innerHeight;
-
-            marquees.forEach((marquee, i) => {
-                const track = marquee.querySelector('.scroll-marquee-track');
-                if (!track) return;
-
-                // Alternate scroll direction per marquee for visual rhythm.
-                // Reverse: track starts with its middle centered in the viewport
-                // so that text is always visible, then drifts right as scroll continues.
-                const isReverse = marquee.classList.contains('scroll-marquee--reverse');
-                const dir = isReverse ? 1 : -1;
-                const initialOffset = isReverse
-                    ? (window.innerWidth - track.scrollWidth) / 2
-                    : 0;
-                const x = initialOffset + dir * (scrollY * 0.15);
-                track.style.transform = `translate3d(${x}px, 0, 0)`;
-
-                // Stained glass glow: brightness pulses as marquee enters viewport
-                const rect = marquee.getBoundingClientRect();
-                if (rect.bottom > 0 && rect.top < vh) {
-                    const center = 1 - Math.abs((rect.top + rect.height / 2) - vh / 2) / (vh / 2);
-                    const glow = Math.max(0, center);
-                    track.style.setProperty('--marquee-opacity', String(0.45 + glow * 0.45));
-                    track.style.setProperty('--marquee-brightness', String(1.4 + glow * 1.0));
-                } else {
-                    track.style.setProperty('--marquee-opacity', '0.45');
-                    track.style.setProperty('--marquee-brightness', '1.4');
-                }
-            });
-
-            ticking = false;
-        }
-
-        window.addEventListener('scroll', () => {
-            if (!ticking) {
-                requestAnimationFrame(update);
-                ticking = true;
-            }
-        }, { passive: true });
-
-        update();
+        // Marquees now run on a CSS keyframe animation (marquee-ltr / marquee-rtl).
+        // This stub is kept in case we later want JS-driven behaviour
+        // (e.g. pause-on-hover, reduced-motion toggles, etc.).
     }
 
 

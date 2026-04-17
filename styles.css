@@ -480,11 +480,19 @@ img { max-width: 100%; display: block; }
 
 .scroll-marquee {
     overflow: hidden;
-    padding: var(--space-lg) 0;
+    padding: var(--space-md) 0;
     position: relative;
     white-space: nowrap;
     pointer-events: none;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+}
+
+.scroll-marquee-row {
+    overflow: hidden;
+    width: 100%;
 }
 
 .scroll-marquee-track {
@@ -492,9 +500,10 @@ img { max-width: 100%; display: block; }
     align-items: center;
     gap: 0;
     font-family: var(--font-hero);
-    font-size: clamp(4rem, 12vw, 10rem);
+    font-size: clamp(2.8rem, 8vw, 6.5rem);
     font-weight: 400;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
     /* Stained glass text fill */
     background-image: url('assets/images/hero/stained-glass.png');
     background-size: cover;
@@ -503,10 +512,14 @@ img { max-width: 100%; display: block; }
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    opacity: var(--marquee-opacity, 0.45);
-    filter: brightness(var(--marquee-brightness, 1.4)) saturate(1.5);
-    will-change: transform, opacity, filter;
-    transition: none;
+    opacity: 0.95;
+    filter: brightness(1.7) saturate(1.8);
+    will-change: transform;
+    animation: marquee-ltr 32s linear infinite;
+}
+
+.scroll-marquee-row--rtl .scroll-marquee-track {
+    animation: marquee-rtl 36s linear infinite;
 }
 
 .scroll-marquee-track span {
@@ -517,6 +530,20 @@ img { max-width: 100%; display: block; }
     padding: 0 0.3em;
     opacity: 0.5;
     font-size: 0.6em;
+}
+
+@keyframes marquee-ltr {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes marquee-rtl {
+    from { transform: translate3d(-50%, 0, 0); }
+    to   { transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-marquee-track { animation: none; }
 }
 
 
