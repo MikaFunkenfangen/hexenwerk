@@ -615,14 +615,11 @@
                 if (t < 1) rafLoad = requestAnimationFrame(loadTick);
             })(performance.now());
 
-            // Willkommen kommt früh (4.5s)
+            // Willkommen kommt früh (4.5s) und bleibt bis zum Ende sichtbar
             schedule(() => overlay.setAttribute('data-welcome-in', ''), 4500);
 
-            // Logo fadet ab 19s sanft aus
-            schedule(() => overlay.removeAttribute('data-logo-in'), 19000);
-            schedule(() => overlay.setAttribute('data-logo-out', ''), 19000);
-
-            // Ende
+            // Ende — das gesamte Overlay fadet aus, Logo und Willkommen
+            // verschwinden synchron über die Overlay-Opacity
             schedule(endIntro, 24000);
         }
 
