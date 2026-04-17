@@ -1174,6 +1174,22 @@ img { max-width: 100%; display: block; }
     letter-spacing: 0.06em;
 }
 
+.essay-hero-credit {
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    margin-top: 0.6rem;
+    padding-left: 0.9rem;
+    border-left: 1px solid var(--border-accent, rgba(212,160,73,0.35));
+}
+
+.essay-hero-credit em {
+    font-style: italic;
+    color: var(--accent-light);
+}
+
 /* Print-only masthead — hidden on screen, appears at top of PDF */
 .print-masthead {
     display: none;
@@ -1734,16 +1750,24 @@ img { max-width: 100%; display: block; }
         line-height: 1.6;
     }
 
-    /* Masthead — project wordmark at the very top of the PDF */
+    /* Masthead — logo + project wordmark at the very top of the PDF */
     .print-masthead {
         display: flex !important;
-        justify-content: space-between;
-        align-items: baseline;
-        padding: 0 2cm 0.4cm;
+        align-items: center;
+        gap: 0.6cm;
+        padding: 0 2cm 0.5cm;
         margin: 0 0 0.8cm;
         border-bottom: 0.5pt solid #8a7348;
         font-family: 'Cormorant Garamond', 'Cormorant', Georgia, serif;
         color: #5a4a30;
+    }
+
+    .print-masthead-logo {
+        height: 1.6cm;
+        width: auto;
+        display: block;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .print-masthead-project {
@@ -1751,10 +1775,7 @@ img { max-width: 100%; display: block; }
         font-style: italic;
         letter-spacing: 0.04em;
         white-space: nowrap;
-    }
-
-    .print-masthead-sep {
-        display: none;
+        flex: 1;
     }
 
     .print-masthead-url {
@@ -1762,6 +1783,7 @@ img { max-width: 100%; display: block; }
         letter-spacing: 0.18em;
         text-transform: uppercase;
         color: #8a7348;
+        white-space: nowrap;
     }
 
     /* Essay hero — keep cover image in the PDF */
@@ -1832,6 +1854,19 @@ img { max-width: 100%; display: block; }
         color: #5a3a1a;
         font-style: normal;
         letter-spacing: 0.06em;
+    }
+
+    .essay-hero-credit {
+        font-size: 9pt;
+        color: #6b5b3a;
+        margin-top: 0.3cm;
+        padding-left: 0.3cm;
+        border-left: 0.5pt solid #8a7348;
+    }
+
+    .essay-hero-credit em {
+        font-style: italic;
+        color: #5a3a1a;
     }
 
     .essay-subtitle-line {
