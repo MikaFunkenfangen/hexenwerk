@@ -515,13 +515,23 @@ img { max-width: 100%; display: block; }
     top: 0;
     z-index: 1;
     padding-top: 12vh;
-    padding-bottom: var(--space-xl);
-    background: var(--bg-deep);
+    padding-bottom: var(--space-xxl);
+    background: linear-gradient(
+        to bottom,
+        var(--bg-deep) 0%,
+        var(--bg-deep) 75%,
+        transparent 100%
+    );
 }
 
 /* Light-bg sections need matching background */
 .exkurse-section > .section-header {
-    background: var(--bg-light);
+    background: linear-gradient(
+        to bottom,
+        var(--bg-light) 0%,
+        var(--bg-light) 75%,
+        transparent 100%
+    );
 }
 
 .essays-section > .section-header .section-title,
@@ -1637,69 +1647,14 @@ img { max-width: 100%; display: block; }
 
 
 /* ============================================================
-   RENAISSANCE TYPOGRAPHY — maximally calligraphic
+   RENAISSANCE TYPOGRAPHY — only on display headings
    ============================================================ */
 
-/* All display headings: thinner, more elegant */
-.hero-title,
-.section-title,
-.perspectives-title,
-.focus-title,
-.projekt-title,
-.legal-title,
-.motifs-heading,
-.essay-hero-title {
-    font-weight: 300;
-    font-style: normal;
-}
-
-/* Body text: slightly more Garamond feel */
-body {
-    font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 1;
-}
-
-/* Old-style numerals for dates and numbers */
+/* Old-style numerals on dates */
 .essay-card-date,
 .exkurse-date,
 .perspective-number {
     font-feature-settings: 'onum' 1, 'pnum' 1;
-}
-
-/* Claims / subtitles: light italic, very Renaissance */
-.section-claim {
-    font-family: var(--font-display);
-    font-weight: 300;
-    font-style: italic;
-    letter-spacing: 0.02em;
-}
-
-/* Intro text: larger, lighter, bookish */
-.intro-text {
-    font-weight: 300;
-    font-size: 1.5rem;
-    line-height: 1.65;
-    letter-spacing: 0.01em;
-}
-
-/* Essay body: refined spacing */
-.essay-body p {
-    font-feature-settings: 'liga' 1, 'kern' 1;
-    hanging-punctuation: first last;
-}
-
-/* Exkurse titles: elegant on light bg */
-.exkurse-title {
-    font-weight: 400;
-    letter-spacing: 0.01em;
-}
-
-/* Pullquote: large, light, calligraphic */
-.essay-pullquote p {
-    font-family: var(--font-display);
-    font-weight: 300;
-    font-size: 1.3rem;
-    line-height: 1.6;
-    letter-spacing: 0.01em;
 }
 
 
@@ -1776,13 +1731,6 @@ body {
     font-weight: 400;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-}
-
-/* --- Intro text — Cormorant body text --- */
-.intro-text {
-    font-weight: 300;
-    font-size: 1.4rem;
-    line-height: 1.7;
 }
 
 /* --- Section titles — thinner, taller --- */
