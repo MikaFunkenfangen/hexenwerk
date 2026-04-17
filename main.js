@@ -222,13 +222,16 @@
                 currentX += (targetX - currentX) * 0.05;
                 currentY += (targetY - currentY) * 0.05;
 
-                // Warm glow following cursor
-                light.style.background = `radial-gradient(
-                    circle 350px at ${currentX}% ${currentY}%,
-                    rgba(212, 160, 49, 0.06) 0%,
-                    rgba(92, 26, 42, 0.03) 40%,
-                    transparent 70%
-                )`;
+                // Colored light spill — as if light pours through stained glass
+                light.style.background = `
+                    radial-gradient(
+                        circle 400px at ${currentX}% ${currentY}%,
+                        rgba(100, 120, 220, 0.08) 0%,
+                        rgba(140, 80, 180, 0.05) 25%,
+                        rgba(212, 160, 49, 0.03) 45%,
+                        transparent 65%
+                    )
+                `;
 
                 // Move the stained glass mask to follow cursor
                 if (glass) {
