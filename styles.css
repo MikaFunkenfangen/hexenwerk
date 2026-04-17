@@ -499,9 +499,16 @@ img { max-width: 100%; display: block; }
 .exkurse-section > .section-header,
 .archiv-section > .section-header {
     position: sticky;
-    top: 12vh;
+    top: 0;
     z-index: 1;
-    padding-bottom: var(--space-xxl);
+    padding-top: 12vh;
+    padding-bottom: var(--space-xl);
+    background: var(--bg-deep);
+}
+
+/* Light-bg sections need matching background */
+.exkurse-section > .section-header {
+    background: var(--bg-light);
 }
 
 .essays-section > .section-header .section-title,
