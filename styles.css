@@ -120,15 +120,24 @@ img { max-width: 100%; display: block; }
 }
 
 .nav-logo {
+    display: inline-flex;
+    align-items: center;
     font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 500;
     letter-spacing: 0.04em;
     color: var(--text-secondary);
-    transition: color 0.3s ease;
+    transition: opacity 0.3s ease, color 0.3s ease;
 }
 
-.nav-logo:hover { color: var(--text-primary); }
+.nav-logo:hover { color: var(--text-primary); opacity: 0.85; }
+
+.nav-logo-img {
+    display: block;
+    height: 40px;
+    width: auto;
+    border-radius: 3px;
+}
 
 .nav-links {
     display: flex;
@@ -305,12 +314,11 @@ img { max-width: 100%; display: block; }
     font-family: var(--font-display);
     font-size: clamp(3rem, 8vw, 7.5rem);
     font-weight: 400;
-    line-height: 1.02;
+    line-height: 1.1;
     letter-spacing: -0.025em;
     color: var(--text-primary);
     margin-bottom: var(--space-md);
-    opacity: 0;
-    animation: fadeUp 1.4s var(--ease-out) 0.5s forwards;
+    padding-bottom: 0.08em;
 }
 
 .hero-subtitle {
@@ -1150,6 +1158,27 @@ img { max-width: 100%; display: block; }
     letter-spacing: 0.04em;
 }
 
+.essay-hero-byline {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+    margin-top: var(--space-xs);
+}
+
+.essay-hero-byline span {
+    color: var(--accent-light);
+    font-style: normal;
+    letter-spacing: 0.06em;
+}
+
+/* Print-only masthead — hidden on screen, appears at top of PDF */
+.print-masthead {
+    display: none;
+}
+
 
 /* ============================================================
    ESSAY BODY
@@ -1705,24 +1734,104 @@ img { max-width: 100%; display: block; }
         line-height: 1.6;
     }
 
+    /* Masthead — project wordmark at the very top of the PDF */
+    .print-masthead {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 0 2cm 0.4cm;
+        margin: 0 0 0.8cm;
+        border-bottom: 0.5pt solid #8a7348;
+        font-family: 'Cormorant Garamond', 'Cormorant', Georgia, serif;
+        color: #5a4a30;
+    }
+
+    .print-masthead-project {
+        font-size: 10pt;
+        font-style: italic;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+    }
+
+    .print-masthead-sep {
+        display: none;
+    }
+
+    .print-masthead-url {
+        font-size: 9pt;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #8a7348;
+    }
+
+    /* Essay hero — keep cover image in the PDF */
     .essay-hero {
         background: none;
         min-height: auto;
-        padding: 2cm 0 1cm;
+        padding: 0.5cm 2cm 1cm;
+        display: block;
+        position: relative;
+        overflow: visible;
+        page-break-after: avoid;
+    }
+
+    .essay-hero-image {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        height: 7cm;
+        margin-bottom: 0.8cm;
+        overflow: hidden;
+    }
+
+    .essay-hero-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        filter: none;
+        opacity: 1 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .essay-hero-overlay { display: none; }
 
+    .essay-hero-content {
+        position: static;
+        padding: 0;
+    }
+
     .essay-hero-title {
         color: #1a1612;
-        font-size: 24pt;
+        font-size: 26pt;
+        line-height: 1.15;
         text-shadow: none;
         animation: none;
         opacity: 1;
+        background: none !important;
+        -webkit-text-fill-color: #1a1612 !important;
+        -webkit-background-clip: border-box !important;
+        margin-bottom: 0.3cm;
     }
 
     .essay-hero-meta {
-        color: #4a4540;
+        color: #6b5b3a;
+        font-size: 9.5pt;
+        letter-spacing: 0.06em;
+    }
+
+    .essay-hero-byline {
+        color: #1a1612;
+        font-size: 11pt;
+        font-style: italic;
+        margin-top: 0.2cm;
+    }
+
+    .essay-hero-byline span {
+        color: #5a3a1a;
+        font-style: normal;
+        letter-spacing: 0.06em;
     }
 
     .essay-subtitle-line {
@@ -1758,13 +1867,29 @@ img { max-width: 100%; display: block; }
         page-break-before: avoid;
     }
 
-    /* Page margins and header */
+    /* Page margins and running footer with attribution */
     @page {
-        margin: 2.5cm 2cm;
+        margin: 2cm 0 2cm 0;
+        @bottom-center {
+            content: 'Hexenwerk · Mika Schöberl · mikaschoeberl.com';
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-style: italic;
+            font-size: 9pt;
+            color: #8a7348;
+        }
+        @bottom-right {
+            content: counter(page);
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 9pt;
+            color: #8a7348;
+        }
     }
 
     @page :first {
-        margin-top: 1cm;
+        margin-top: 1.2cm;
+        @bottom-right {
+            content: counter(page);
+        }
     }
 }
 
@@ -1835,14 +1960,7 @@ img { max-width: 100%; display: block; }
     letter-spacing: -0.01em;
 }
 
-/* --- Nav logo — Renaissance small caps feel --- */
-.nav-logo {
-    font-family: var(--font-display);
-    font-size: 1.05rem;
-    font-weight: 400;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
+/* Nav logo — image-based wordmark; text styles kept as fallback */
 
 /* --- Section titles — thinner, taller --- */
 .section-title {
