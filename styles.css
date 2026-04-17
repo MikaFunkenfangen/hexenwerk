@@ -1713,6 +1713,32 @@ img { max-width: 100%; display: block; }
     color: var(--text-dark);
 }
 
+/* Großes Portrait in der Projekt-Seite, spannt den Textstrom auf */
+.projekt-portrait {
+    margin: clamp(3rem, 8vw, 5.5rem) calc(var(--space-lg) * -1);
+    overflow: hidden;
+    border-radius: 2px;
+    box-shadow:
+        0 40px 80px -30px rgba(26, 22, 18, 0.45),
+        0 16px 32px -12px rgba(26, 22, 18, 0.25),
+        inset 0 0 0 1px rgba(26, 22, 18, 0.08);
+}
+
+.projekt-portrait img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: contrast(1.02) saturate(0.97);
+}
+
+@media (min-width: 720px) {
+    .projekt-portrait {
+        margin-left: calc(50% - 46vw);
+        margin-right: calc(50% - 46vw);
+        max-width: 92vw;
+    }
+}
+
 .projekt-list li strong {
     color: var(--text-dark);
 }
