@@ -508,45 +508,14 @@ img { max-width: 100%; display: block; }
     position: relative;
 }
 
-.essays-section > .section-header,
-.exkurse-section > .section-header,
-.archiv-section > .section-header {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    padding-top: 12vh;
-    padding-bottom: var(--space-xxl);
-    background: linear-gradient(
-        to bottom,
-        var(--bg-deep) 0%,
-        var(--bg-deep) 75%,
-        transparent 100%
-    );
-}
-
-/* Light-bg sections need matching background */
-.exkurse-section > .section-header {
-    background: linear-gradient(
-        to bottom,
-        var(--bg-light) 0%,
-        var(--bg-light) 75%,
-        transparent 100%
-    );
-}
-
+/* Section titles — large but normal flow, no sticky */
 .essays-section > .section-header .section-title,
 .exkurse-section > .section-header .section-title,
 .archiv-section > .section-header .section-title {
-    font-size: clamp(3rem, 7vw, 6rem);
-    line-height: 1.0;
-    letter-spacing: -0.03em;
-}
-
-.essays-list,
-.exkurse-list,
-.archiv-preview {
-    position: relative;
-    z-index: 2;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-md);
 }
 
 
