@@ -482,33 +482,76 @@
             timers.push(setTimeout(fn, delay));
         }
 
-        function fadeAudioOut(duration) {
+        // Unlock-Listener für geblocktes Autoplay; nur auf dem Overlay
+        // registriert und wieder abgebaut, damit Audio NIE auf der
+        // Hauptseite weiterläuft, wenn das Intro schon vorbei ist.
+        let unlockHandler = null;
+        function attachUnlock() {
+            if (!audio || ended || unlockHandler) return;
+            unlockHandler = () => {
+                if (ended || !audio) return;
+                audio.play().then(() => {
+                    const t0 = performance.now();
+                    (function vol(now) {
+                        if (ended) return;
+                        const pr = Math.min(1, (now - t0) / 3000);
+                        audio.volume = pr * 0.85;
+                        if (pr < 1) requestAnimationFrame(vol);
+                    })(performance.now());
+                }).catch(() => {});
+                detachUnlock();
+            };
+            overlay.addEventListener('pointerdown', unlockHandler, { passive: true });
+            overlay.addEventListener('touchstart', unlockHandler, { passive: true });
+        }
+        function detachUnlock() {
+            if (!unlockHandler) return;
+            overlay.removeEventListener('pointerdown', unlockHandler);
+            overlay.removeEventListener('touchstart', unlockHandler);
+            unlockHandler = null;
+        }
+
+        function stopAudioCompletely() {
             if (!audio) return;
-            const start = audio.volume;
-            const t0 = performance.now();
-            function step(now) {
-                if (ended && !audio.paused) {
-                    const p = Math.min(1, (now - t0) / duration);
-                    audio.volume = start * (1 - p);
-                    if (p < 1) requestAnimationFrame(step);
-                    else { audio.pause(); audio.volume = 0; }
-                }
-            }
-            requestAnimationFrame(step);
+            try {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.src = '';
+                audio.removeAttribute('src');
+                audio.load();
+                audio.remove();
+            } catch (_) { /* ignore */ }
         }
 
         function endIntro() {
             if (ended) return;
             ended = true;
+            // Erst alle ausstehenden Intro-Timer canceln, DANN neue Cleanup-Timer starten
+            timers.forEach(clearTimeout);
+            timers.length = 0;
+            if (rafLoad) cancelAnimationFrame(rafLoad);
+
             overlay.setAttribute('data-state', 'hidden');
-            fadeAudioOut(1200);
-            schedule(() => {
+            detachUnlock();
+
+            // Audio sanft ausblenden und dann komplett abbrechen
+            if (audio) {
+                const start = audio.volume;
+                const t0 = performance.now();
+                (function step(now) {
+                    if (!audio || !audio.isConnected) return;
+                    const p = Math.min(1, (now - t0) / 900);
+                    audio.volume = Math.max(0, start * (1 - p));
+                    if (p < 1) requestAnimationFrame(step);
+                    else stopAudioCompletely();
+                })(performance.now());
+            }
+
+            setTimeout(() => {
+                stopAudioCompletely();  // defensive
                 overlay.remove();
                 document.body.classList.remove('intro-active');
-            }, 1600);
-            // Cleanup
-            timers.forEach(clearTimeout);
-            if (rafLoad) cancelAnimationFrame(rafLoad);
+            }, 1400);
         }
 
         function startAudioWithFade() {
@@ -527,22 +570,8 @@
                             if (pr < 1) requestAnimationFrame(vol);
                         })(performance.now());
                     }).catch(() => {
-                        // Autoplay blockiert — eine einzelne Interaktion startet es dann
-                        const unlock = () => {
-                            audio.play().then(() => {
-                                const t0 = performance.now();
-                                (function vol(now) {
-                                    if (ended) return;
-                                    const pr = Math.min(1, (now - t0) / 3000);
-                                    audio.volume = pr * 0.85;
-                                    if (pr < 1) requestAnimationFrame(vol);
-                                })(performance.now());
-                            }).catch(() => {});
-                            document.removeEventListener('pointerdown', unlock);
-                            document.removeEventListener('keydown', unlock);
-                        };
-                        document.addEventListener('pointerdown', unlock, { once: true });
-                        document.addEventListener('keydown', unlock, { once: true });
+                        // Autoplay blockiert — warte auf Tap/Click innerhalb des Intro-Overlays
+                        attachUnlock();
                     });
                 }
             } catch (_) { /* ignore */ }
