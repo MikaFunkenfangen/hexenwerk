@@ -467,9 +467,17 @@ img { max-width: 100%; display: block; }
     font-size: clamp(4rem, 12vw, 10rem);
     font-weight: 400;
     letter-spacing: -0.03em;
-    color: var(--text-primary);
-    opacity: 0.05;
-    will-change: transform;
+    /* Stained glass text fill */
+    background-image: url('assets/images/hero/stained-glass.png');
+    background-size: cover;
+    background-position: center;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    opacity: var(--marquee-opacity, 0.15);
+    filter: brightness(var(--marquee-brightness, 1.2)) saturate(1.4);
+    will-change: transform, opacity, filter;
     transition: none;
 }
 

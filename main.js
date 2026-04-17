@@ -443,14 +443,30 @@
         if (REDUCED_MOTION) return;
 
         const track = document.querySelector('.scroll-marquee-track');
+        const marquee = document.querySelector('.scroll-marquee');
         if (!track) return;
 
         let ticking = false;
         function update() {
             const scrollY = window.scrollY;
-            // Move left as user scrolls down. Speed factor: 0.3
             const x = -(scrollY * 0.3);
             track.style.transform = `translate3d(${x}px, 0, 0)`;
+
+            // Stained glass glow: brightness pulses as marquee enters viewport
+            if (marquee) {
+                const rect = marquee.getBoundingClientRect();
+                const vh = window.innerHeight;
+                if (rect.bottom > 0 && rect.top < vh) {
+                    // How centered is it in the viewport? 1.0 = perfectly centered
+                    const center = 1 - Math.abs((rect.top + rect.height / 2) - vh / 2) / (vh / 2);
+                    const glow = Math.max(0, center);
+                    // Opacity: 0.15 base → up to 0.55 when centered
+                    track.style.setProperty('--marquee-opacity', String(0.15 + glow * 0.4));
+                    // Brightness: 1.2 base → up to 2.2 when centered
+                    track.style.setProperty('--marquee-brightness', String(1.2 + glow * 1.0));
+                }
+            }
+
             ticking = false;
         }
 
