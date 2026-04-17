@@ -186,9 +186,10 @@
         if (REDUCED_MOTION || IS_TOUCH || IS_MOBILE) return;
 
         const hero = document.querySelector('.hero');
+        const glass = document.querySelector('.hero-stained-glass');
         if (!hero) return;
 
-        // Create light element
+        // Also create the subtle warm light overlay
         const light = document.createElement('div');
         light.className = 'hero-cursor-light';
         hero.appendChild(light);
@@ -200,11 +201,13 @@
         hero.addEventListener('mouseenter', () => {
             active = true;
             light.style.opacity = '1';
+            if (glass) glass.classList.add('is-active');
         });
 
         hero.addEventListener('mouseleave', () => {
             active = false;
             light.style.opacity = '0';
+            if (glass) glass.classList.remove('is-active');
         });
 
         hero.addEventListener('mousemove', (e) => {
@@ -218,11 +221,20 @@
                 // Slow lerp for trailing effect
                 currentX += (targetX - currentX) * 0.05;
                 currentY += (targetY - currentY) * 0.05;
+
+                // Warm glow following cursor
                 light.style.background = `radial-gradient(
-                    circle 320px at ${currentX}% ${currentY}%,
-                    rgba(212, 160, 49, 0.08) 0%,
+                    circle 350px at ${currentX}% ${currentY}%,
+                    rgba(212, 160, 49, 0.06) 0%,
+                    rgba(92, 26, 42, 0.03) 40%,
                     transparent 70%
                 )`;
+
+                // Move the stained glass mask to follow cursor
+                if (glass) {
+                    glass.style.setProperty('--glass-x', `${currentX}%`);
+                    glass.style.setProperty('--glass-y', `${currentY}%`);
+                }
             }
             requestAnimationFrame(animate);
         }
