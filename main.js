@@ -447,6 +447,134 @@
 
 
     /* ============================================================
+       10b. INTRO OVERLAY — art-house Eingangssequenz (30s)
+       Choreographie:
+         0.5s  : Overlay aktiviert — Buntglas/Sonne/Corona erscheinen, Skip sichtbar
+         1-12s : Lade-Prozent 0 → 100 %, Mond wandert über die Sonne (Eclipse 0→1)
+         10s   : Audio blendet ein (startet bei 01:10 des Songs)
+         12s   : Logo-Video startet und fadet ein
+         20s   : Willkommens-Titel fadet ein
+         28s   : Overlay + Audio faden aus
+         30s   : Overlay aus dem DOM-Fluss, body.intro-active entfernt
+       ============================================================ */
+    function initIntroOverlay() {
+        const overlay = document.getElementById('introOverlay');
+        if (!overlay) return;
+
+        // Nur einmal pro Session zeigen, nicht wenn Reduced Motion erzwungen wird
+        if (sessionStorage.getItem('hexenwerk:intro-seen') === '1' || REDUCED_MOTION) {
+            overlay.remove();
+            return;
+        }
+
+        document.body.classList.add('intro-active');
+
+        const percentEl = document.getElementById('introPercent');
+        const moon = document.getElementById('introEclipseMoon');
+        const video = document.getElementById('introVideo');
+        const audio = document.getElementById('introMusic');
+        const skipBtn = document.getElementById('introSkip');
+
+        let ended = false;
+        const timers = [];
+        let rafLoad = null;
+
+        function schedule(fn, delay) {
+            timers.push(setTimeout(fn, delay));
+        }
+
+        function fadeAudioOut(duration) {
+            if (!audio) return;
+            const start = audio.volume;
+            const t0 = performance.now();
+            function step(now) {
+                if (ended && !audio.paused) {
+                    const p = Math.min(1, (now - t0) / duration);
+                    audio.volume = start * (1 - p);
+                    if (p < 1) requestAnimationFrame(step);
+                    else { audio.pause(); audio.volume = 0; }
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        function endIntro() {
+            if (ended) return;
+            ended = true;
+            overlay.setAttribute('data-state', 'hidden');
+            fadeAudioOut(1200);
+            schedule(() => {
+                overlay.remove();
+                document.body.classList.remove('intro-active');
+                sessionStorage.setItem('hexenwerk:intro-seen', '1');
+            }, 1600);
+            // Cleanup
+            timers.forEach(clearTimeout);
+            if (rafLoad) cancelAnimationFrame(rafLoad);
+        }
+
+        skipBtn && skipBtn.addEventListener('click', endIntro);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !ended) endIntro();
+        });
+
+        // Loading-Counter + Eclipse-Progress (gemeinsam über 11s)
+        const loadStart = performance.now() + 500;
+        const loadDur   = 11000;
+        function loadTick(now) {
+            if (ended) return;
+            const t = Math.max(0, Math.min(1, (now - loadStart) / loadDur));
+            const pct = Math.round(t * 100);
+            if (percentEl) percentEl.textContent = pct;
+            if (moon) moon.style.setProperty('--eclipse-progress', t.toFixed(3));
+            if (t < 1) rafLoad = requestAnimationFrame(loadTick);
+        }
+        rafLoad = requestAnimationFrame(loadTick);
+
+        // Phase 0: Overlay aktivieren
+        schedule(() => overlay.setAttribute('data-state', 'active'), 50);
+
+        // Phase 1: Audio einblenden (ab 10s), Song-Startpunkt 01:10 = 70s
+        schedule(() => {
+            if (audio) {
+                try {
+                    audio.currentTime = 70;
+                    audio.volume = 0;
+                    const play = audio.play();
+                    if (play && play.then) {
+                        play.then(() => {
+                            // Fade von 0 → 0.85 über 4s
+                            const t0 = performance.now();
+                            (function vol(now) {
+                                if (ended) return;
+                                const p = Math.min(1, (now - t0) / 4000);
+                                audio.volume = p * 0.85;
+                                if (p < 1) requestAnimationFrame(vol);
+                            })(performance.now());
+                        }).catch(() => { /* Autoplay blockiert — stumm weiterlaufen */ });
+                    }
+                } catch (_) { /* ignore */ }
+            }
+        }, 10000);
+
+        // Phase 2: Video einblenden
+        schedule(() => {
+            if (video) {
+                overlay.setAttribute('data-video-in', '');
+                const play = video.play();
+                if (play && play.catch) play.catch(() => {});
+            }
+        }, 12000);
+
+        // Phase 3: Willkommen einblenden
+        schedule(() => overlay.setAttribute('data-welcome-in', ''), 20000);
+
+        // Phase 4: Ende
+        schedule(endIntro, 28500);
+    }
+
+
+    /* ============================================================
        11c. CARD SPOTLIGHT — indirektes Scheinwerferlicht auf Essay-Bildern
        Setzt --spot-x / --spot-y je nach Cursorposition; CSS macht den Rest.
        ============================================================ */
@@ -756,6 +884,7 @@
         initSmoothAnchors();
         initImageLoading();
         initNavToggle();
+        initIntroOverlay();
         initScrollMarquee();
         initParticleFields();
         initCardSpotlight();

@@ -23,6 +23,42 @@
 </head>
 <body>
 
+    <!-- ============================================================
+         INTRO OVERLAY — art-house Eingangssequenz (30s)
+         ============================================================ -->
+    <div class="intro-overlay" id="introOverlay" role="presentation">
+        <!-- Buntglas-Hintergrund in leichter Bewegung -->
+        <div class="intro-stainedglass" aria-hidden="true">
+            <img src="assets/images/hero/stained-glass.png" alt="">
+        </div>
+
+        <!-- Sonnenfinsternis mit Prozentanzeige -->
+        <div class="intro-eclipse" aria-hidden="true">
+            <div class="intro-eclipse-sun"></div>
+            <div class="intro-eclipse-moon" id="introEclipseMoon"></div>
+            <div class="intro-eclipse-corona"></div>
+        </div>
+
+        <div class="intro-loading" aria-live="polite">
+            <span class="intro-loading-num" id="introPercent">0</span><span class="intro-loading-unit">%</span>
+        </div>
+
+        <!-- Logo-Video mittig, fadet in bei totaler Eclipse -->
+        <video class="intro-video" id="introVideo" playsinline muted preload="auto">
+            <source src="assets/intro/logo-animation.mp4" type="video/mp4">
+        </video>
+
+        <!-- Willkommens-Typographie (Hermis Soul, Regenbogen-Gradient) -->
+        <div class="intro-welcome" id="introWelcome">
+            <p class="intro-kicker">Forschung &amp; Empowerment</p>
+            <h1 class="intro-title glass-text">Willkommen</h1>
+        </div>
+
+        <audio id="introMusic" preload="auto" src="assets/intro/intro-music.mp3"></audio>
+
+        <button class="intro-skip" id="introSkip" type="button">Überspringen →</button>
+    </div>
+
     <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
 
     <!-- Navigation -->
