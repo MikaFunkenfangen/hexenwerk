@@ -473,6 +473,7 @@
         const logo = document.getElementById('introLogo');
         const audio = document.getElementById('introMusic');
         const skipBtn = document.getElementById('introSkip');
+        const enterBtn = document.getElementById('introEnter');
 
         let ended = false;
         const timers = [];
@@ -582,47 +583,54 @@
             if (e.key === 'Escape' && !ended) endIntro();
         });
 
-        // Loading-Counter (über 22s — synchron zum gesamten Intro)
-        const loadStart = performance.now() + 500;
-        const loadDur   = 22000;
-        function loadTick(now) {
-            if (ended) return;
-            const t = Math.max(0, Math.min(1, (now - loadStart) / loadDur));
-            const pct = Math.round(t * 100);
-            if (percentEl) percentEl.textContent = pct;
-            if (t < 1) rafLoad = requestAnimationFrame(loadTick);
+        // Overlay vorab sichtbar machen (Logo + Buntglas + Eintreten-Button)
+        overlay.setAttribute('data-state', 'active');
+        if (logo) overlay.setAttribute('data-logo-in', '');
+
+        let started = false;
+        function startIntroSequence() {
+            if (started || ended) return;
+            started = true;
+            overlay.setAttribute('data-started', '');
+
+            // Audio sofort starten — wir sind im User-Gesture-Kontext
+            startAudioWithFade();
+
+            // Loading-Counter über 22s
+            const loadStart = performance.now() + 200;
+            const loadDur   = 22000;
+            (function loadTick(now) {
+                if (ended) return;
+                const t = Math.max(0, Math.min(1, (now - loadStart) / loadDur));
+                if (percentEl) percentEl.textContent = Math.round(t * 100);
+                if (t < 1) rafLoad = requestAnimationFrame(loadTick);
+            })(performance.now());
+
+            // Willkommen kommt früh (4.5s)
+            schedule(() => overlay.setAttribute('data-welcome-in', ''), 4500);
+
+            // Logo fadet ab 19s sanft aus
+            schedule(() => overlay.removeAttribute('data-logo-in'), 19000);
+            schedule(() => overlay.setAttribute('data-logo-out', ''), 19000);
+
+            // Ende
+            schedule(endIntro, 24000);
         }
-        rafLoad = requestAnimationFrame(loadTick);
 
-        // Phase 0: Overlay aktivieren — Buntglas + Skip
-        schedule(() => overlay.setAttribute('data-state', 'active'), 50);
+        if (enterBtn) enterBtn.addEventListener('click', startIntroSequence, { once: true });
 
-        // Phase 1: Logo fadet langsam ein (5-7s Übergang)
-        schedule(() => overlay.setAttribute('data-logo-in', ''), 1000);
+        // Falls der Nutzer den Eintreten-Button ignoriert: nach 15s einfach
+        // ohne Musik weiterlaufen lassen (Safety).
+        setTimeout(() => { if (!started && !ended) startIntroSequence(); }, 15000);
 
-        // Phase 2: Audio sofort starten (Song-Startpunkt 01:10 = 70s)
-        startAudioWithFade();
-
-        // Phase 3: Willkommens-Typographie ab 18s
-        schedule(() => overlay.setAttribute('data-welcome-in', ''), 18000);
-
-        // Phase 4: Logo fadet ab 24s wieder aus — synchron zum Musik-Ausklang
-        schedule(() => overlay.removeAttribute('data-logo-in'), 24500);
-        schedule(() => overlay.setAttribute('data-logo-out', ''), 24500);
-
-        // Phase 5: Ende
-        schedule(endIntro, 29000);
-
-        // Safety-Net: falls irgendetwas hängt (Throttling, Error, etc.),
-        // wird das Intro nach spätestens 33 Sekunden zwangsweise beendet
-        // und der Body wieder scroll­bar gemacht.
+        // Safety-Net: nach spätestens 45 Sekunden ist das Intro weg,
+        // unabhängig vom Zustand der Timeline.
         setTimeout(() => {
             if (!ended) endIntro();
-            // Defensive: falls sogar endIntro etwas durchrutschen lässt
             document.body.classList.remove('intro-active');
             const o = document.getElementById('introOverlay');
             if (o) o.remove();
-        }, 33000);
+        }, 45000);
     }
 
 
