@@ -18,8 +18,11 @@
     --border:         rgba(232, 228, 223, 0.08);
     --border-accent:  rgba(184, 134, 11, 0.3);
 
-    --font-display:  'Cormorant Garamond', 'Playfair Display', 'Georgia', serif;
-    --font-body:     'Source Sans 3', 'Source Sans Pro', sans-serif;
+    --font-display:   'EB Garamond', 'Cormorant Garamond', 'Georgia', serif;
+    --font-archaic:   'IM Fell English', 'EB Garamond', 'Cormorant Garamond', 'Georgia', serif;
+    --font-smallcaps: 'IM Fell English SC', 'EB Garamond', 'Cormorant Garamond', 'Georgia', serif;
+    --font-body:      'Source Sans 3', 'Source Sans Pro', sans-serif;
+    --font-reading:   'EB Garamond', 'Cormorant Garamond', 'Georgia', serif;
 
     /* Dark Academia palette */
     --burgundy:       #5c1a2a;
@@ -77,6 +80,8 @@ body {
     color: var(--text-primary);
     background-color: var(--bg-deep);
     overflow-x: hidden;
+    /* Renaissance typography defaults: old-style numerals, ligatures */
+    font-feature-settings: 'onum' 1, 'liga' 1, 'kern' 1;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -162,11 +167,12 @@ img { max-width: 100%; display: block; }
    ============================================================ */
 
 .section-kicker {
-    font-family: var(--font-body);
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.22em;
+    font-family: var(--font-smallcaps);
+    font-size: 0.82rem;
+    font-weight: 400;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
+    font-feature-settings: 'smcp' 1, 'onum' 1;
     color: var(--accent);
     margin-bottom: var(--space-md);
 }
@@ -299,11 +305,12 @@ img { max-width: 100%; display: block; }
 }
 
 .hero-overline {
-    font-family: var(--font-body);
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.22em;
+    font-family: var(--font-smallcaps);
+    font-size: 0.88rem;
+    font-weight: 400;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
+    font-feature-settings: 'smcp' 1, 'onum' 1;
     color: var(--accent);
     margin-bottom: var(--space-md);
     opacity: 0;
@@ -639,11 +646,12 @@ img { max-width: 100%; display: block; }
 }
 
 .intro-overline {
-    font-family: var(--font-body);
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.22em;
+    font-family: var(--font-smallcaps);
+    font-size: 0.88rem;
+    font-weight: 400;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
+    font-feature-settings: 'smcp' 1, 'onum' 1;
     color: var(--accent-on-light);
     margin-bottom: var(--space-md);
 }
@@ -765,12 +773,13 @@ img { max-width: 100%; display: block; }
 }
 
 .section-claim {
-    font-family: var(--font-display);
+    font-family: var(--font-archaic);
     font-style: italic;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     color: var(--accent-light);
     margin-bottom: var(--space-md);
-    letter-spacing: 0.01em;
+    letter-spacing: 0.015em;
+    font-feature-settings: 'onum' 1, 'liga' 1, 'dlig' 1;
 }
 
 .section-description {
@@ -1212,19 +1221,22 @@ img { max-width: 100%; display: block; }
 
 .essay-body p {
     margin-bottom: var(--space-md);
-    font-size: 1rem;
-    line-height: 1.85;
+    font-family: var(--font-reading);
+    font-size: 1.12rem;
+    line-height: 1.7;
     color: var(--text-primary);
+    font-feature-settings: 'onum' 1, 'liga' 1, 'dlig' 1, 'kern' 1;
 }
 
 .essay-body em { font-style: italic; }
 
 .essay-lead {
-    font-family: var(--font-display);
-    font-size: 1.15rem;
+    font-family: var(--font-archaic);
+    font-size: 1.28rem;
     font-weight: 400;
-    line-height: 1.75;
+    line-height: 1.65;
     color: var(--text-primary);
+    font-feature-settings: 'onum' 1, 'liga' 1, 'dlig' 1;
     margin-bottom: var(--space-lg) !important;
 }
 
@@ -1266,12 +1278,13 @@ img { max-width: 100%; display: block; }
 }
 
 .essay-pullquote p {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
+    font-family: var(--font-archaic);
+    font-size: 1.35rem;
     font-weight: 400;
     font-style: italic;
     line-height: 1.6;
     color: var(--text-primary);
+    font-feature-settings: 'onum' 1, 'liga' 1, 'dlig' 1;
     margin-bottom: 0 !important;
     position: relative;
 }
@@ -1566,10 +1579,12 @@ img { max-width: 100%; display: block; }
 }
 
 .projekt-section p {
-    font-size: 1rem;
-    line-height: 1.85;
+    font-family: var(--font-reading);
+    font-size: 1.12rem;
+    line-height: 1.7;
     color: var(--text-primary);
     margin-bottom: var(--space-md);
+    font-feature-settings: 'onum' 1, 'liga' 1, 'kern' 1;
 }
 
 .projekt-section p em { font-style: italic; }
