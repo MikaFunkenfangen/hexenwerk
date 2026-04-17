@@ -600,8 +600,8 @@
         // Phase 1: Logo fadet langsam ein (5-7s Übergang)
         schedule(() => overlay.setAttribute('data-logo-in', ''), 1000);
 
-        // Phase 2: Audio ab 2s einblenden (Song-Startpunkt 01:10 = 70s)
-        schedule(startAudioWithFade, 2000);
+        // Phase 2: Audio sofort starten (Song-Startpunkt 01:10 = 70s)
+        startAudioWithFade();
 
         // Phase 3: Willkommens-Typographie ab 18s
         schedule(() => overlay.setAttribute('data-welcome-in', ''), 18000);
