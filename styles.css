@@ -2792,13 +2792,39 @@ img { max-width: 100%; display: block; }
 
 .archiv-section--dig {
     position: relative;
-    background: #ebe4d7;
-    color: var(--text-dark);
+    background: var(--bg-deep);
+    color: var(--text-primary);
     padding: clamp(4rem, 10vw, 8rem) var(--space-lg);
     overflow: hidden;
     isolation: isolate;
     max-width: none;
     margin: 0;
+}
+
+/* Bibliotheks-Hintergrund — warmes Archivfoto */
+.archiv-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url('assets/images/backgrounds/library.jpg');
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+    filter: saturate(1.1) contrast(1.05) brightness(1.25);
+}
+
+/* Leichter Overlay — Bibliothek bleibt gut sichtbar, Text lesbar */
+.archiv-bg-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at center, rgba(10, 15, 13, 0.15) 0%, rgba(10, 15, 13, 0.55) 100%);
+    z-index: 0;
+}
+
+.archiv-section--dig > *:not(.archiv-bg):not(.archiv-bg-overlay) {
+    position: relative;
+    z-index: 1;
 }
 
 /* Reset the old archiv-preview frame inside the dig variant */
@@ -2810,47 +2836,13 @@ img { max-width: 100%; display: block; }
     margin: 0 auto;
 }
 
-/* Feldbuch-Raster, radial ausgeblendet */
-.archiv-grid-overlay {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-        linear-gradient(to right, rgba(138, 101, 8, 0.08) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(138, 101, 8, 0.08) 1px, transparent 1px);
-    background-size: 72px 72px;
-    -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
-            mask-image: radial-gradient(ellipse at center, black 35%, transparent 85%);
-    z-index: 0;
-}
-
-/* Vier Eck-Marken wie an einem Fundplatz */
-.archiv-corner {
-    position: absolute;
-    width: 28px;
-    height: 28px;
-    border-color: rgba(138, 101, 8, 0.45);
-    z-index: 0;
-    pointer-events: none;
-}
-.archiv-corner--tl { top: 28px;    left: 28px;    border-top: 1px solid; border-left: 1px solid; }
-.archiv-corner--tr { top: 28px;    right: 28px;   border-top: 1px solid; border-right: 1px solid; }
-.archiv-corner--bl { bottom: 28px; left: 28px;    border-bottom: 1px solid; border-left: 1px solid; }
-.archiv-corner--br { bottom: 28px; right: 28px;   border-bottom: 1px solid; border-right: 1px solid; }
-
-.archiv-section--dig > * {
-    position: relative;
-    z-index: 1;
-}
-
-/* Section-Deko-Nummer (03) auf hellem Grund anpassen */
+/* Section-Deko-Nummer (03) auf dunklem Bibliotheksgrund */
 .archiv-section--dig .section-number-deco {
-    color: rgba(26, 22, 18, 0.08);
+    color: rgba(232, 228, 223, 0.06);
 }
 
-/* Header-Farben auf hellem Grund */
 .archiv-section--dig .section-description {
-    color: var(--text-dark-secondary);
+    color: var(--text-secondary);
 }
 
 /* Corpus-Label oberhalb des Titels — monospaced-kaltsachlich */
@@ -2860,7 +2852,7 @@ img { max-width: 100%; display: block; }
     font-weight: 600;
     letter-spacing: 0.32em;
     text-transform: uppercase;
-    color: var(--accent-on-light);
+    color: var(--accent-light);
     margin-bottom: var(--space-sm);
     display: inline-flex;
     align-items: center;
@@ -2870,9 +2862,10 @@ img { max-width: 100%; display: block; }
 .archiv-label-dot {
     width: 8px;
     height: 8px;
-    background: var(--accent-on-light);
+    background: var(--accent-light);
     display: inline-block;
     animation: dig-pulse 2.8s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(212, 160, 49, 0.5);
 }
 
 @keyframes dig-pulse {
