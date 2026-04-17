@@ -485,7 +485,7 @@ img { max-width: 100%; display: block; }
     display: inline-flex;
     align-items: center;
     gap: 0;
-    font-family: var(--font-display);
+    font-family: var(--font-hero);
     font-size: clamp(4rem, 12vw, 10rem);
     font-weight: 400;
     letter-spacing: -0.03em;
