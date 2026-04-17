@@ -310,43 +310,7 @@ img { max-width: 100%; display: block; }
     color: var(--text-primary);
     margin-bottom: var(--space-md);
     opacity: 0;
-    animation: fadeUp 1.4s var(--ease-out) 0.5s forwards,
-               titleGlow 4s ease-in-out 2.5s infinite;
-    text-shadow: 0 2px 40px rgba(0, 0, 0, 0.3);
-}
-
-@keyframes titleGlow {
-    0%   {
-        text-shadow:
-            0 2px 40px rgba(0, 0, 0, 0.3),
-            0 0 20px rgba(212, 160, 49, 0),
-            0 0 60px rgba(212, 160, 49, 0);
-    }
-    30%  {
-        text-shadow:
-            0 2px 40px rgba(0, 0, 0, 0.3),
-            0 0 30px rgba(212, 160, 49, 0.15),
-            0 0 80px rgba(184, 134, 11, 0.08);
-    }
-    50%  {
-        text-shadow:
-            0 2px 40px rgba(0, 0, 0, 0.3),
-            0 0 20px rgba(212, 160, 49, 0.05),
-            0 0 50px rgba(184, 134, 11, 0.03);
-    }
-    70%  {
-        text-shadow:
-            0 2px 40px rgba(0, 0, 0, 0.3),
-            0 0 35px rgba(212, 160, 49, 0.12),
-            0 0 90px rgba(184, 134, 11, 0.06),
-            0 0 120px rgba(140, 80, 40, 0.03);
-    }
-    100% {
-        text-shadow:
-            0 2px 40px rgba(0, 0, 0, 0.3),
-            0 0 20px rgba(212, 160, 49, 0),
-            0 0 60px rgba(212, 160, 49, 0);
-    }
+    animation: fadeUp 1.4s var(--ease-out) 0.5s forwards;
 }
 
 .hero-subtitle {
@@ -442,7 +406,7 @@ img { max-width: 100%; display: block; }
 /* When split text is active, remove the block-level animation */
 .hero-title.is-split {
     opacity: 1;
-    animation: titleGlow 4s ease-in-out 2.5s infinite;
+    animation: none;
 }
 
 /* Split chars inherit the glass-text background */
@@ -1598,20 +1562,49 @@ img { max-width: 100%; display: block; }
    STAINED GLASS TEXT — reusable on all large headings
    ============================================================ */
 
+/* Stained glass text — on dark backgrounds.
+   Bright enough to read, with fluorescent glow bleeding out. */
 .glass-text {
     background-image: url('assets/images/hero/stained-glass.png');
-    background-size: cover;
-    background-position: center;
+    background-size: 180% auto;
+    background-position: center 40%;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    filter: brightness(1.4) saturate(1.3);
+    filter: brightness(2.5) saturate(1.8);
+    /* Fluorescent glow behind the glass letters */
+    text-shadow:
+        0 0 30px rgba(100, 170, 255, 0.4),
+        0 0 60px rgba(100, 170, 255, 0.2),
+        0 0 100px rgba(212, 160, 49, 0.15),
+        0 0 160px rgba(140, 80, 180, 0.08);
+    animation: glassFlicker 5s ease-in-out infinite;
 }
 
-/* On light backgrounds, boost brightness */
+@keyframes glassFlicker {
+    0%   { filter: brightness(2.5) saturate(1.8); }
+    25%  { filter: brightness(2.8) saturate(2.0); }
+    50%  { filter: brightness(2.3) saturate(1.7); }
+    75%  { filter: brightness(2.9) saturate(1.9); }
+    100% { filter: brightness(2.5) saturate(1.8); }
+}
+
+/* On light/parchment backgrounds — darker, more contrast */
 .glass-text--light {
-    filter: brightness(0.9) saturate(1.5) contrast(1.2);
+    filter: brightness(1.0) saturate(2.2) contrast(1.5);
+    text-shadow:
+        0 0 20px rgba(80, 60, 160, 0.25),
+        0 0 50px rgba(180, 100, 40, 0.12);
+    animation: glassFlickerLight 5s ease-in-out infinite;
+}
+
+@keyframes glassFlickerLight {
+    0%   { filter: brightness(1.0) saturate(2.2) contrast(1.5); }
+    25%  { filter: brightness(1.15) saturate(2.4) contrast(1.5); }
+    50%  { filter: brightness(0.95) saturate(2.1) contrast(1.5); }
+    75%  { filter: brightness(1.1) saturate(2.3) contrast(1.5); }
+    100% { filter: brightness(1.0) saturate(2.2) contrast(1.5); }
 }
 
 
