@@ -461,8 +461,17 @@
         const overlay = document.getElementById('introOverlay');
         if (!overlay) return;
 
-        // Bei reduced-motion das Intro komplett überspringen
+        // Bei reduced-motion komplett überspringen
         if (REDUCED_MOTION) {
+            overlay.remove();
+            return;
+        }
+
+        // Wenn die Seite mit einem Anchor geladen wurde (z.B. #titelgeschichten
+        // via Nav-Link), das Intro überspringen. Nur der reine Seitenstart
+        // (ohne Hash) oder die explizite Rubrik #intro spielt die Sequenz.
+        const hash = window.location.hash;
+        if (hash && hash !== '#intro') {
             overlay.remove();
             return;
         }
