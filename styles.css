@@ -2918,13 +2918,22 @@ body.intro-active {
     position: relative;
     z-index: 2;
     display: block;
-    width: min(92vw, 900px);
-    max-height: 82vh;
+    width: min(88vw, 720px);
+    max-height: 62vh;
     object-fit: contain;
+    /* Platz nach unten für Eintreten-Button + Prozent reservieren */
+    margin-bottom: clamp(6rem, 18vh, 10rem);
     opacity: 0;
     transform: scale(0.94);
     transition: opacity 5s var(--ease-out), transform 7s var(--ease-out);
-    filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.15));
+}
+
+@media (min-width: 900px) {
+    .intro-logo {
+        max-height: 58vh;
+        width: min(56vh, 560px);
+    }
 }
 
 .intro-overlay[data-logo-in] .intro-logo {
@@ -3021,7 +3030,7 @@ body.intro-active {
 .intro-enter {
     position: absolute;
     z-index: 5;
-    bottom: clamp(4rem, 14vh, 8rem);
+    bottom: clamp(4.5rem, 12vh, 7rem);
     left: 50%;
     transform: translateX(-50%);
     font-family: var(--font-smallcaps);
