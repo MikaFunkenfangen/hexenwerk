@@ -454,12 +454,15 @@
                 const track = marquee.querySelector('.scroll-marquee-track');
                 if (!track) return;
 
-                // Alternate scroll direction per marquee for visual rhythm
+                // Alternate scroll direction per marquee for visual rhythm.
+                // Reverse: track starts with its middle centered in the viewport
+                // so that text is always visible, then drifts right as scroll continues.
                 const isReverse = marquee.classList.contains('scroll-marquee--reverse');
                 const dir = isReverse ? 1 : -1;
-                // Reverse marquees start pre-offset to the left so text stays visible
-                const initialOffset = isReverse ? -track.scrollWidth * 0.4 : 0;
-                const x = initialOffset + dir * (scrollY * 0.3);
+                const initialOffset = isReverse
+                    ? (window.innerWidth - track.scrollWidth) / 2
+                    : 0;
+                const x = initialOffset + dir * (scrollY * 0.15);
                 track.style.transform = `translate3d(${x}px, 0, 0)`;
 
                 // Stained glass glow: brightness pulses as marquee enters viewport
@@ -467,8 +470,11 @@
                 if (rect.bottom > 0 && rect.top < vh) {
                     const center = 1 - Math.abs((rect.top + rect.height / 2) - vh / 2) / (vh / 2);
                     const glow = Math.max(0, center);
-                    track.style.setProperty('--marquee-opacity', String(0.15 + glow * 0.4));
-                    track.style.setProperty('--marquee-brightness', String(1.2 + glow * 1.0));
+                    track.style.setProperty('--marquee-opacity', String(0.45 + glow * 0.45));
+                    track.style.setProperty('--marquee-brightness', String(1.4 + glow * 1.0));
+                } else {
+                    track.style.setProperty('--marquee-opacity', '0.45');
+                    track.style.setProperty('--marquee-brightness', '1.4');
                 }
             });
 

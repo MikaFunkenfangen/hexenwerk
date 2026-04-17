@@ -503,8 +503,8 @@ img { max-width: 100%; display: block; }
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    opacity: var(--marquee-opacity, 0.15);
-    filter: brightness(var(--marquee-brightness, 1.2)) saturate(1.4);
+    opacity: var(--marquee-opacity, 0.45);
+    filter: brightness(var(--marquee-brightness, 1.4)) saturate(1.5);
     will-change: transform, opacity, filter;
     transition: none;
 }
@@ -2963,6 +2963,12 @@ img { max-width: 100%; display: block; }
     line-height: 1.65;
     color: var(--text-dark-secondary);
     margin: 0;
+}
+
+/* Marquee innerhalb der Fundstücke-Sektion: Abstand oben, randvoll */
+.archiv-section--dig .scroll-marquee--in-section {
+    margin: clamp(3rem, 8vw, 6rem) calc(var(--space-lg) * -1) 0;
+    padding: var(--space-md) 0;
 }
 
 /* Medium (section & card headings) — Bjork Serif */
