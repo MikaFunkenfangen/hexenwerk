@@ -3062,6 +3062,17 @@ img { max-width: 100%; display: block; }
     padding: var(--space-md) 0;
 }
 
+/* Fundstücke hat bereits den Bibliotheks-Hintergrund — keine zusätzlichen
+   Trennlinien über dem Bild */
+.archiv-section--dig .section-header {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.archiv-section--dig .section-header::after {
+    display: none;
+}
+
 /* Medium (section & card headings) — Bjork Serif */
 .section-title,
 .focus-title,
