@@ -825,6 +825,8 @@ img { max-width: 100%; display: block; }
     padding: var(--space-xl) var(--space-lg) var(--space-xl);
     max-width: var(--max-width);
     margin: 0 auto;
+    position: relative;
+    overflow: hidden;
 }
 
 .section-header {
@@ -2796,6 +2798,35 @@ img { max-width: 100%; display: block; }
         animation: none !important;
         opacity: 0.5 !important;
     }
+}
+
+
+/* ============================================================
+   PARTICLE FIELD — schwebende Lichtpartikel auf dunklen Sektionen
+   ============================================================ */
+
+.particle-field {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    mix-blend-mode: screen;
+    opacity: 0.85;
+}
+
+.hero-inner,
+.essays-list,
+.section-header,
+.archiv-preview,
+.scroll-marquee {
+    position: relative;
+    z-index: 2;
+}
+
+.archiv-section--dig .particle-field {
+    z-index: 1;
 }
 
 

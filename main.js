@@ -447,6 +447,146 @@
 
 
     /* ============================================================
+       11b. PARTICLE FIELDS — schwebende Lichtpartikel auf dunklen Sektionen
+       Canvas-basiert, pausiert wenn nicht im Viewport, respektiert
+       prefers-reduced-motion und visibilitychange.
+       ============================================================ */
+    function initParticleFields() {
+        if (REDUCED_MOTION) return;
+
+        const canvases = [...document.querySelectorAll('.particle-field')];
+        if (!canvases.length) return;
+
+        const fields = canvases.map(canvas => ({
+            canvas,
+            ctx: canvas.getContext('2d'),
+            particles: [],
+            w: 0,
+            h: 0,
+            visible: false
+        }));
+
+        function spawnParticle(field, initialLife = true) {
+            return {
+                x: Math.random() * field.w,
+                y: initialLife ? Math.random() * field.h : field.h + Math.random() * 40,
+                vx: (Math.random() - 0.5) * 0.08,
+                vy: -(0.08 + Math.random() * 0.18),
+                size: 0.4 + Math.random() * 1.8,
+                drift: Math.random() * Math.PI * 2,
+                life: initialLife ? Math.random() * 400 : 0,
+                maxLife: 700 + Math.random() * 1000,
+                tone: Math.random() > 0.35 ? 'gold' : 'cream'
+            };
+        }
+
+        function resize(field) {
+            const rect = field.canvas.parentElement.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            field.w = rect.width;
+            field.h = rect.height;
+            field.canvas.width = rect.width * dpr;
+            field.canvas.height = rect.height * dpr;
+            field.canvas.style.width = rect.width + 'px';
+            field.canvas.style.height = rect.height + 'px';
+            field.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const density = Math.min(70, Math.max(20, Math.floor((rect.width * rect.height) / 14000)));
+            field.particles = Array.from({ length: density }, () => spawnParticle(field, true));
+        }
+
+        fields.forEach(resize);
+
+        let rafId = null;
+        let running = false;
+
+        function step() {
+            let anyVisible = false;
+            const vh = window.innerHeight;
+            fields.forEach(field => {
+                const rect = field.canvas.getBoundingClientRect();
+                const inView = rect.bottom > -200 && rect.top < vh + 200;
+                field.visible = inView;
+                if (!inView) return;
+                anyVisible = true;
+
+                const ctx = field.ctx;
+                ctx.clearRect(0, 0, field.w, field.h);
+
+                for (const p of field.particles) {
+                    p.life++;
+                    p.x += p.vx + Math.sin(p.drift + p.life * 0.008) * 0.12;
+                    p.y += p.vy;
+
+                    const t = p.life / p.maxLife;
+                    let alpha;
+                    if (t < 0.18) alpha = t / 0.18;
+                    else if (t > 0.82) alpha = Math.max(0, (1 - t) / 0.18);
+                    else alpha = 1;
+                    alpha *= 0.55;
+
+                    if (p.tone === 'gold') {
+                        ctx.fillStyle = 'rgba(218, 172, 78, ' + alpha + ')';
+                    } else {
+                        ctx.fillStyle = 'rgba(232, 228, 223, ' + (alpha * 0.7) + ')';
+                    }
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (p.life > p.maxLife || p.y < -20 || p.x < -20 || p.x > field.w + 20) {
+                        Object.assign(p, spawnParticle(field, false));
+                    }
+                }
+            });
+
+            if (anyVisible && !document.hidden) {
+                rafId = requestAnimationFrame(step);
+            } else {
+                running = false;
+                rafId = null;
+            }
+        }
+
+        function start() {
+            if (running || document.hidden) return;
+            running = true;
+            rafId = requestAnimationFrame(step);
+        }
+
+        function stop() {
+            if (rafId !== null) cancelAnimationFrame(rafId);
+            running = false;
+            rafId = null;
+        }
+
+        // Resize handling — rAF-debounced
+        let resizeRaf = null;
+        window.addEventListener('resize', () => {
+            if (resizeRaf) cancelAnimationFrame(resizeRaf);
+            resizeRaf = requestAnimationFrame(() => {
+                fields.forEach(resize);
+                resizeRaf = null;
+            });
+        });
+
+        // Pause when tab hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stop();
+            else start();
+        });
+
+        // Resume when section scrolls into view
+        const io = new IntersectionObserver(entries => {
+            const anyIntersecting = entries.some(e => e.isIntersecting);
+            if (anyIntersecting) start();
+        }, { rootMargin: '200px' });
+        fields.forEach(field => io.observe(field.canvas));
+
+        start();
+    }
+
+
+    /* ============================================================
        12. SECTION NUMBERS — oversized decorative parallax numbers
        Creates a <span> from data-section-number attribute.
        ============================================================ */
@@ -596,6 +736,7 @@
         initImageLoading();
         initNavToggle();
         initScrollMarquee();
+        initParticleFields();
         initSectionNumbers();
         initScrollEffects();
         initFocusBackdrop();
