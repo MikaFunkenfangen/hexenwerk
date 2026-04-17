@@ -447,6 +447,27 @@
 
 
     /* ============================================================
+       11c. CARD SPOTLIGHT — indirektes Scheinwerferlicht auf Essay-Bildern
+       Setzt --spot-x / --spot-y je nach Cursorposition; CSS macht den Rest.
+       ============================================================ */
+    function initCardSpotlight() {
+        if (IS_TOUCH) return;  // kein Spotlight auf Touch-Geräten
+        const images = document.querySelectorAll('.essay-card-image');
+        if (!images.length) return;
+
+        images.forEach(img => {
+            img.addEventListener('mousemove', e => {
+                const rect = img.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                img.style.setProperty('--spot-x', x + '%');
+                img.style.setProperty('--spot-y', y + '%');
+            }, { passive: true });
+        });
+    }
+
+
+    /* ============================================================
        11b. PARTICLE FIELDS — schwebende Lichtpartikel auf dunklen Sektionen
        Canvas-basiert, pausiert wenn nicht im Viewport, respektiert
        prefers-reduced-motion und visibilitychange.
@@ -737,6 +758,7 @@
         initNavToggle();
         initScrollMarquee();
         initParticleFields();
+        initCardSpotlight();
         initSectionNumbers();
         initScrollEffects();
         initFocusBackdrop();

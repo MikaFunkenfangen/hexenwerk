@@ -896,6 +896,31 @@ img { max-width: 100%; display: block; }
     aspect-ratio: 3 / 2;
     border-radius: 3px;
     overflow: hidden;
+    position: relative;
+}
+
+/* Indirektes Scheinwerferlicht — folgt dem Cursor über dem Bild */
+.essay-card-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out);
+    background: radial-gradient(
+        circle 260px at var(--spot-x, 50%) var(--spot-y, 50%),
+        rgba(255, 235, 180, 0.45) 0%,
+        rgba(255, 220, 140, 0.22) 25%,
+        rgba(212, 160, 49, 0.12) 50%,
+        transparent 75%
+    );
+    mix-blend-mode: soft-light;
+    z-index: 3;
+}
+
+.essay-card:hover .essay-card-image::after,
+.essay-card-image:hover::after {
+    opacity: 1;
 }
 
 .essay-card-img {
