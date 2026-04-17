@@ -1713,9 +1713,10 @@ img { max-width: 100%; display: block; }
     color: var(--text-dark);
 }
 
-/* Großes Portrait in der Projekt-Seite, spannt den Textstrom auf */
+/* Portrait in der Projekt-Seite, ruhig und zentriert */
 .projekt-portrait {
-    margin: clamp(3rem, 8vw, 5.5rem) calc(var(--space-lg) * -1);
+    margin: clamp(3rem, 8vw, 5.5rem) auto;
+    max-width: 100%;
     overflow: hidden;
     border-radius: 2px;
     box-shadow:
@@ -1733,9 +1734,7 @@ img { max-width: 100%; display: block; }
 
 @media (min-width: 720px) {
     .projekt-portrait {
-        margin-left: calc(50% - 46vw);
-        margin-right: calc(50% - 46vw);
-        max-width: 92vw;
+        max-width: 560px;
     }
 }
 
