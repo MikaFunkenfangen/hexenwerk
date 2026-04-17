@@ -442,7 +442,12 @@ img { max-width: 100%; display: block; }
 /* When split text is active, remove the block-level animation */
 .hero-title.is-split {
     opacity: 1;
-    animation: none;
+    animation: titleGlow 4s ease-in-out 2.5s infinite;
+}
+
+/* Split chars inherit the glass-text background */
+.hero-title.glass-text.is-split .hero-char {
+    -webkit-text-fill-color: transparent;
 }
 
 
@@ -1607,6 +1612,94 @@ img { max-width: 100%; display: block; }
 
 .footer-legal-links a:hover {
     color: var(--accent);
+}
+
+
+/* ============================================================
+   STAINED GLASS TEXT — reusable on all large headings
+   ============================================================ */
+
+.glass-text {
+    background-image: url('assets/images/hero/stained-glass.png');
+    background-size: cover;
+    background-position: center;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: brightness(1.4) saturate(1.3);
+}
+
+/* On light backgrounds, boost brightness */
+.glass-text--light {
+    filter: brightness(0.9) saturate(1.5) contrast(1.2);
+}
+
+
+/* ============================================================
+   RENAISSANCE TYPOGRAPHY — maximally calligraphic
+   ============================================================ */
+
+/* All display headings: thinner, more elegant */
+.hero-title,
+.section-title,
+.perspectives-title,
+.focus-title,
+.projekt-title,
+.legal-title,
+.motifs-heading,
+.essay-hero-title {
+    font-weight: 300;
+    font-style: normal;
+}
+
+/* Body text: slightly more Garamond feel */
+body {
+    font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 1;
+}
+
+/* Old-style numerals for dates and numbers */
+.essay-card-date,
+.exkurse-date,
+.perspective-number {
+    font-feature-settings: 'onum' 1, 'pnum' 1;
+}
+
+/* Claims / subtitles: light italic, very Renaissance */
+.section-claim {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.02em;
+}
+
+/* Intro text: larger, lighter, bookish */
+.intro-text {
+    font-weight: 300;
+    font-size: 1.5rem;
+    line-height: 1.65;
+    letter-spacing: 0.01em;
+}
+
+/* Essay body: refined spacing */
+.essay-body p {
+    font-feature-settings: 'liga' 1, 'kern' 1;
+    hanging-punctuation: first last;
+}
+
+/* Exkurse titles: elegant on light bg */
+.exkurse-title {
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
+
+/* Pullquote: large, light, calligraphic */
+.essay-pullquote p {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 1.3rem;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
 }
 
 
