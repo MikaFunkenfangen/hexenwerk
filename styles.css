@@ -409,6 +409,8 @@ img { max-width: 100%; display: block; }
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-muted);
+    /* Optical centering: letter-spacing adds trailing space; compensate with padding-left */
+    padding-left: 0.15em;
 }
 
 .hero-scroll-line {
