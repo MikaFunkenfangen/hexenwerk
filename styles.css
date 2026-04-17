@@ -477,9 +477,10 @@ img { max-width: 100%; display: block; }
 .exkurse-section > .section-header .section-title,
 .archiv-section > .section-header .section-title {
     font-size: clamp(2.5rem, 6vw, 5rem);
-    line-height: 1.05;
+    line-height: 1.2;
     letter-spacing: -0.02em;
     margin-bottom: var(--space-md);
+    padding-bottom: 0.12em;
 }
 
 
@@ -1562,41 +1563,54 @@ img { max-width: 100%; display: block; }
    STAINED GLASS TEXT — reusable on all large headings
    ============================================================ */
 
-/* Stained glass text — readable with subtle glow */
+/* Stained glass text — saturated multi-color gradient, fully legible, no dark gaps */
 .glass-text {
-    background-image: url('assets/images/hero/stained-glass.png');
-    background-size: 180% auto;
-    background-position: center 40%;
+    background-image: linear-gradient(
+        100deg,
+        #f0c64a 0%,
+        #e08a2e 14%,
+        #c94a2c 28%,
+        #a03050 42%,
+        #6a3a9a 56%,
+        #2f66a8 72%,
+        #3a9ab2 86%,
+        #4fae5a 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    filter: brightness(2) saturate(1.5);
-    text-shadow:
-        0 0 8px rgba(100, 170, 255, 0.12),
-        0 0 25px rgba(212, 160, 49, 0.06);
+    filter: saturate(1.15);
     animation: glassFlicker 6s ease-in-out infinite;
 }
 
 @keyframes glassFlicker {
-    0%   { filter: brightness(2.0) saturate(1.5); }
-    50%  { filter: brightness(2.3) saturate(1.7); }
-    100% { filter: brightness(2.0) saturate(1.5); }
+    0%   { filter: saturate(1.15) brightness(1); }
+    50%  { filter: saturate(1.3)  brightness(1.08); }
+    100% { filter: saturate(1.15) brightness(1); }
 }
 
-/* On light/parchment backgrounds */
+/* On light/parchment backgrounds — deeper, more saturated stops for contrast on cream */
 .glass-text--light {
-    filter: brightness(1.1) saturate(2) contrast(1.4);
-    text-shadow:
-        0 0 6px rgba(80, 60, 160, 0.08),
-        0 0 18px rgba(180, 100, 40, 0.04);
+    background-image: linear-gradient(
+        100deg,
+        #c48a1a 0%,
+        #b55a1e 14%,
+        #982a1e 28%,
+        #6e1a3a 42%,
+        #3a1a6a 56%,
+        #1a3a88 72%,
+        #1a6a88 86%,
+        #2a6a2a 100%
+    );
+    filter: saturate(1.2);
     animation: glassFlickerLight 6s ease-in-out infinite;
 }
 
 @keyframes glassFlickerLight {
-    0%   { filter: brightness(1.1) saturate(2.0) contrast(1.4); }
-    50%  { filter: brightness(1.25) saturate(2.2) contrast(1.4); }
-    100% { filter: brightness(1.1) saturate(2.0) contrast(1.4); }
+    0%   { filter: saturate(1.2)  brightness(1); }
+    50%  { filter: saturate(1.35) brightness(1.05); }
+    100% { filter: saturate(1.2)  brightness(1); }
 }
 
 
