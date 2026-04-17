@@ -470,7 +470,6 @@
         document.body.classList.add('intro-active');
 
         const percentEl = document.getElementById('introPercent');
-        const moon = document.getElementById('introEclipseMoon');
         const video = document.getElementById('introVideo');
         const audio = document.getElementById('introMusic');
         const skipBtn = document.getElementById('introSkip');
@@ -518,23 +517,31 @@
             if (e.key === 'Escape' && !ended) endIntro();
         });
 
-        // Loading-Counter + Eclipse-Progress (gemeinsam über 11s)
+        // Loading-Counter (über 22s — synchron zum gesamten Intro)
         const loadStart = performance.now() + 500;
-        const loadDur   = 11000;
+        const loadDur   = 22000;
         function loadTick(now) {
             if (ended) return;
             const t = Math.max(0, Math.min(1, (now - loadStart) / loadDur));
             const pct = Math.round(t * 100);
             if (percentEl) percentEl.textContent = pct;
-            if (moon) moon.style.setProperty('--eclipse-progress', t.toFixed(3));
             if (t < 1) rafLoad = requestAnimationFrame(loadTick);
         }
         rafLoad = requestAnimationFrame(loadTick);
 
-        // Phase 0: Overlay aktivieren
+        // Phase 0: Overlay aktivieren — Buntglas + Skip
         schedule(() => overlay.setAttribute('data-state', 'active'), 50);
 
-        // Phase 1: Audio einblenden (ab 10s), Song-Startpunkt 01:10 = 70s
+        // Phase 1: Logo-Video startet früh und fadet slow ein (4s)
+        schedule(() => {
+            if (video) {
+                overlay.setAttribute('data-video-in', '');
+                const play = video.play();
+                if (play && play.catch) play.catch(() => {});
+            }
+        }, 800);
+
+        // Phase 2: Audio einblenden (ab 10s), Song-Startpunkt 01:10 = 70s
         schedule(() => {
             if (audio) {
                 try {
@@ -557,17 +564,8 @@
             }
         }, 10000);
 
-        // Phase 2: Video einblenden
-        schedule(() => {
-            if (video) {
-                overlay.setAttribute('data-video-in', '');
-                const play = video.play();
-                if (play && play.catch) play.catch(() => {});
-            }
-        }, 12000);
-
-        // Phase 3: Willkommen einblenden
-        schedule(() => overlay.setAttribute('data-welcome-in', ''), 20000);
+        // Phase 3: Willkommen einblenden (ab 18s)
+        schedule(() => overlay.setAttribute('data-welcome-in', ''), 18000);
 
         // Phase 4: Ende
         schedule(endIntro, 28500);
