@@ -2887,41 +2887,29 @@ body.intro-active {
     100% { transform: scale(1.05) rotate(0deg); }
 }
 
-/* Video-Wrapper: zentriert + deckt den Veo-Watermark unten rechts ab */
-.intro-video-wrap {
+/* Logo-Bild — maximal groß, zentriert, weich ein- und ausfadend */
+.intro-logo {
     position: relative;
     z-index: 2;
-    width: clamp(280px, 78vw, 820px);
-    aspect-ratio: 16 / 9;
-    max-height: 70vh;
-    overflow: hidden;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
+    width: min(92vw, 900px);
+    max-height: 82vh;
+    object-fit: contain;
     opacity: 0;
-    transform: scale(0.88);
-    transition: opacity 4s var(--ease-out), transform 4.5s var(--ease-out);
-    mix-blend-mode: screen;
+    transform: scale(0.94);
+    transition: opacity 5s var(--ease-out), transform 7s var(--ease-out);
+    filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.6));
 }
 
-/* Schwarzer Radialverlauf-Patch, der das Veo-Wasserzeichen in der
-   rechten unteren Ecke verdeckt und weich in den Rand ausläuft. */
-.intro-video-wrap::after {
-    content: '';
-    position: absolute;
-    right: -4%;
-    bottom: -4%;
-    width: 28%;
-    height: 24%;
-    background: radial-gradient(ellipse at 85% 85%, #000 45%, rgba(0,0,0,0.85) 60%, transparent 100%);
-    pointer-events: none;
-    z-index: 2;
-}
-
-.intro-overlay[data-video-in] .intro-video-wrap {
+.intro-overlay[data-logo-in] .intro-logo {
     opacity: 1;
     transform: scale(1);
+}
+
+.intro-overlay[data-logo-out] .intro-logo {
+    opacity: 0;
+    transform: scale(1.04);
+    transition: opacity 3.5s var(--ease-out), transform 4s var(--ease-out);
 }
 
 /* Prozent-Anzeige */
@@ -2948,18 +2936,6 @@ body.intro-active {
     min-width: 3ch;
     display: inline-block;
     text-align: right;
-}
-
-/* Video füllt den Wrapper und ist leicht vergrößert, damit das Veo-
-   Wasserzeichen in der unteren rechten Ecke durch den Overflow
-   abgeschnitten wird. */
-.intro-video {
-    width: 108%;
-    height: 108%;
-    object-fit: cover;
-    object-position: center 42%;
-    filter: contrast(1.08) saturate(1.1);
-    display: block;
 }
 
 /* Willkommens-Typographie */

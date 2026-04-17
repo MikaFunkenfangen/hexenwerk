@@ -461,8 +461,8 @@
         const overlay = document.getElementById('introOverlay');
         if (!overlay) return;
 
-        // Nur einmal pro Session zeigen, nicht wenn Reduced Motion erzwungen wird
-        if (sessionStorage.getItem('hexenwerk:intro-seen') === '1' || REDUCED_MOTION) {
+        // Bei reduced-motion das Intro komplett überspringen
+        if (REDUCED_MOTION) {
             overlay.remove();
             return;
         }
@@ -470,7 +470,7 @@
         document.body.classList.add('intro-active');
 
         const percentEl = document.getElementById('introPercent');
-        const video = document.getElementById('introVideo');
+        const logo = document.getElementById('introLogo');
         const audio = document.getElementById('introMusic');
         const skipBtn = document.getElementById('introSkip');
 
@@ -505,11 +505,47 @@
             schedule(() => {
                 overlay.remove();
                 document.body.classList.remove('intro-active');
-                sessionStorage.setItem('hexenwerk:intro-seen', '1');
             }, 1600);
             // Cleanup
             timers.forEach(clearTimeout);
             if (rafLoad) cancelAnimationFrame(rafLoad);
+        }
+
+        function startAudioWithFade() {
+            if (!audio || ended) return;
+            try {
+                audio.currentTime = 70;
+                audio.volume = 0;
+                const p = audio.play();
+                if (p && p.then) {
+                    p.then(() => {
+                        const t0 = performance.now();
+                        (function vol(now) {
+                            if (ended) return;
+                            const pr = Math.min(1, (now - t0) / 4000);
+                            audio.volume = pr * 0.85;
+                            if (pr < 1) requestAnimationFrame(vol);
+                        })(performance.now());
+                    }).catch(() => {
+                        // Autoplay blockiert — eine einzelne Interaktion startet es dann
+                        const unlock = () => {
+                            audio.play().then(() => {
+                                const t0 = performance.now();
+                                (function vol(now) {
+                                    if (ended) return;
+                                    const pr = Math.min(1, (now - t0) / 3000);
+                                    audio.volume = pr * 0.85;
+                                    if (pr < 1) requestAnimationFrame(vol);
+                                })(performance.now());
+                            }).catch(() => {});
+                            document.removeEventListener('pointerdown', unlock);
+                            document.removeEventListener('keydown', unlock);
+                        };
+                        document.addEventListener('pointerdown', unlock, { once: true });
+                        document.addEventListener('keydown', unlock, { once: true });
+                    });
+                }
+            } catch (_) { /* ignore */ }
         }
 
         skipBtn && skipBtn.addEventListener('click', endIntro);
@@ -532,43 +568,21 @@
         // Phase 0: Overlay aktivieren — Buntglas + Skip
         schedule(() => overlay.setAttribute('data-state', 'active'), 50);
 
-        // Phase 1: Logo-Video startet früh und fadet slow ein (4s)
-        schedule(() => {
-            if (video) {
-                overlay.setAttribute('data-video-in', '');
-                const play = video.play();
-                if (play && play.catch) play.catch(() => {});
-            }
-        }, 800);
+        // Phase 1: Logo fadet langsam ein (5-7s Übergang)
+        schedule(() => overlay.setAttribute('data-logo-in', ''), 1000);
 
-        // Phase 2: Audio einblenden (ab 10s), Song-Startpunkt 01:10 = 70s
-        schedule(() => {
-            if (audio) {
-                try {
-                    audio.currentTime = 70;
-                    audio.volume = 0;
-                    const play = audio.play();
-                    if (play && play.then) {
-                        play.then(() => {
-                            // Fade von 0 → 0.85 über 4s
-                            const t0 = performance.now();
-                            (function vol(now) {
-                                if (ended) return;
-                                const p = Math.min(1, (now - t0) / 4000);
-                                audio.volume = p * 0.85;
-                                if (p < 1) requestAnimationFrame(vol);
-                            })(performance.now());
-                        }).catch(() => { /* Autoplay blockiert — stumm weiterlaufen */ });
-                    }
-                } catch (_) { /* ignore */ }
-            }
-        }, 10000);
+        // Phase 2: Audio ab 2s einblenden (Song-Startpunkt 01:10 = 70s)
+        schedule(startAudioWithFade, 2000);
 
-        // Phase 3: Willkommen einblenden (ab 18s)
+        // Phase 3: Willkommens-Typographie ab 18s
         schedule(() => overlay.setAttribute('data-welcome-in', ''), 18000);
 
-        // Phase 4: Ende
-        schedule(endIntro, 28500);
+        // Phase 4: Logo fadet ab 24s wieder aus — synchron zum Musik-Ausklang
+        schedule(() => overlay.removeAttribute('data-logo-in'), 24500);
+        schedule(() => overlay.setAttribute('data-logo-out', ''), 24500);
+
+        // Phase 5: Ende
+        schedule(endIntro, 29000);
     }
 
 
