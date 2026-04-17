@@ -531,9 +531,9 @@ img { max-width: 100%; display: block; }
 .essays-section > .section-header .section-title,
 .exkurse-section > .section-header .section-title,
 .archiv-section > .section-header .section-title {
-    font-size: clamp(2.5rem, 6vw, 5rem);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    font-size: clamp(3.2rem, 13vw, 7rem);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
     margin-bottom: var(--space-md);
     padding-bottom: 0.12em;
 }
