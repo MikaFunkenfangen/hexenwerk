@@ -464,9 +464,13 @@ img { max-width: 100%; display: block; }
     animation: none;
 }
 
-/* Split chars inherit the glass-text background */
+/* Split chars inherit the glass-text gradient */
 .hero-title.glass-text.is-split .hero-char {
+    background-image: inherit;
+    background-clip: text;
+    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    color: transparent;
 }
 
 
