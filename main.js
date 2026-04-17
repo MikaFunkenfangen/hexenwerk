@@ -612,6 +612,17 @@
 
         // Phase 5: Ende
         schedule(endIntro, 29000);
+
+        // Safety-Net: falls irgendetwas hängt (Throttling, Error, etc.),
+        // wird das Intro nach spätestens 33 Sekunden zwangsweise beendet
+        // und der Body wieder scroll­bar gemacht.
+        setTimeout(() => {
+            if (!ended) endIntro();
+            // Defensive: falls sogar endIntro etwas durchrutschen lässt
+            document.body.classList.remove('intro-active');
+            const o = document.getElementById('introOverlay');
+            if (o) o.remove();
+        }, 33000);
     }
 
 
