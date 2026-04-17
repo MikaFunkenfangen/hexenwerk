@@ -212,28 +212,30 @@ img { max-width: 100%; display: block; }
 }
 
 /* Stained glass window layer — illuminated by cursor */
-/* Stained glass — hidden until cursor enters hero.
-   Then: bright, vivid light pours through where the cursor points. */
+/* Stained glass — light pours through on cursor/touch.
+   Warm tone, large radius, works on all devices. */
 .hero-stained-glass {
     position: absolute;
     inset: 0;
     z-index: 1;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.8s var(--ease-out);
+    transition: opacity 1s var(--ease-out);
     -webkit-mask-image: radial-gradient(
-        circle 400px at var(--glass-x, 50%) var(--glass-y, 50%),
+        circle 550px at var(--glass-x, 50%) var(--glass-y, 50%),
         rgba(0,0,0,1) 0%,
-        rgba(0,0,0,0.7) 20%,
-        rgba(0,0,0,0.3) 45%,
-        rgba(0,0,0,0) 65%
+        rgba(0,0,0,0.75) 20%,
+        rgba(0,0,0,0.4) 40%,
+        rgba(0,0,0,0.1) 60%,
+        rgba(0,0,0,0) 75%
     );
     mask-image: radial-gradient(
-        circle 400px at var(--glass-x, 50%) var(--glass-y, 50%),
+        circle 550px at var(--glass-x, 50%) var(--glass-y, 50%),
         rgba(0,0,0,1) 0%,
-        rgba(0,0,0,0.7) 20%,
-        rgba(0,0,0,0.3) 45%,
-        rgba(0,0,0,0) 65%
+        rgba(0,0,0,0.75) 20%,
+        rgba(0,0,0,0.4) 40%,
+        rgba(0,0,0,0.1) 60%,
+        rgba(0,0,0,0) 75%
     );
 }
 
@@ -246,11 +248,27 @@ img { max-width: 100%; display: block; }
     height: 100%;
     object-fit: cover;
     object-position: center 30%;
-    filter: brightness(1) saturate(1.2);
+    /* Warm shift: sepia adds warmth, hue-rotate pushes toward amber */
+    filter: brightness(1.1) saturate(1.1) sepia(0.25) hue-rotate(-10deg);
 }
 
 @media (max-width: 640px) {
-    .hero-stained-glass { display: none; }
+    .hero-stained-glass {
+        -webkit-mask-image: radial-gradient(
+            circle 300px at var(--glass-x, 50%) var(--glass-y, 50%),
+            rgba(0,0,0,1) 0%,
+            rgba(0,0,0,0.6) 25%,
+            rgba(0,0,0,0.2) 50%,
+            rgba(0,0,0,0) 70%
+        );
+        mask-image: radial-gradient(
+            circle 300px at var(--glass-x, 50%) var(--glass-y, 50%),
+            rgba(0,0,0,1) 0%,
+            rgba(0,0,0,0.6) 25%,
+            rgba(0,0,0,0.2) 50%,
+            rgba(0,0,0,0) 70%
+        );
+    }
 }
 
 .hero-grain {

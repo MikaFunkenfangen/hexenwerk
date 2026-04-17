@@ -183,30 +183,34 @@
        Opacity capped at 0.08.
        ============================================================ */
     function initCursorLight() {
-        if (REDUCED_MOTION || IS_TOUCH || IS_MOBILE) return;
+        if (REDUCED_MOTION) return;
 
         const hero = document.querySelector('.hero');
         const glass = document.querySelector('.hero-stained-glass');
         if (!hero) return;
 
-        // Also create the subtle warm light overlay
-        const light = document.createElement('div');
-        light.className = 'hero-cursor-light';
-        hero.appendChild(light);
+        // Warm light overlay (desktop only)
+        let light = null;
+        if (!IS_TOUCH) {
+            light = document.createElement('div');
+            light.className = 'hero-cursor-light';
+            hero.appendChild(light);
+        }
 
         let currentX = 50, currentY = 50;
         let targetX = 50, targetY = 50;
         let active = false;
 
+        // --- Desktop: mouse events ---
         hero.addEventListener('mouseenter', () => {
             active = true;
-            light.style.opacity = '1';
+            if (light) light.style.opacity = '1';
             if (glass) glass.classList.add('is-active');
         });
 
         hero.addEventListener('mouseleave', () => {
             active = false;
-            light.style.opacity = '0';
+            if (light) light.style.opacity = '0';
             if (glass) glass.classList.remove('is-active');
         });
 
@@ -216,24 +220,50 @@
             targetY = ((e.clientY - rect.top) / rect.height) * 100;
         });
 
+        // --- Mobile: touch events ---
+        hero.addEventListener('touchstart', (e) => {
+            active = true;
+            if (glass) glass.classList.add('is-active');
+            const touch = e.touches[0];
+            const rect = hero.getBoundingClientRect();
+            targetX = ((touch.clientX - rect.left) / rect.width) * 100;
+            targetY = ((touch.clientY - rect.top) / rect.height) * 100;
+        }, { passive: true });
+
+        hero.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const rect = hero.getBoundingClientRect();
+            targetX = ((touch.clientX - rect.left) / rect.width) * 100;
+            targetY = ((touch.clientY - rect.top) / rect.height) * 100;
+        }, { passive: true });
+
+        hero.addEventListener('touchend', () => {
+            // Keep visible for a moment, then fade
+            setTimeout(() => {
+                active = false;
+                if (glass) glass.classList.remove('is-active');
+            }, 1500);
+        });
+
         function animate() {
             if (active) {
-                // Slow lerp for trailing effect
-                currentX += (targetX - currentX) * 0.05;
-                currentY += (targetY - currentY) * 0.05;
+                currentX += (targetX - currentX) * 0.08;
+                currentY += (targetY - currentY) * 0.08;
 
-                // Colored light spill — as if light pours through stained glass
-                light.style.background = `
-                    radial-gradient(
-                        circle 400px at ${currentX}% ${currentY}%,
-                        rgba(100, 120, 220, 0.08) 0%,
-                        rgba(140, 80, 180, 0.05) 25%,
-                        rgba(212, 160, 49, 0.03) 45%,
-                        transparent 65%
-                    )
-                `;
+                // Warm light spill
+                if (light) {
+                    light.style.background = `
+                        radial-gradient(
+                            circle 550px at ${currentX}% ${currentY}%,
+                            rgba(212, 160, 49, 0.07) 0%,
+                            rgba(180, 120, 60, 0.04) 30%,
+                            rgba(140, 80, 40, 0.02) 50%,
+                            transparent 70%
+                        )
+                    `;
+                }
 
-                // Move the stained glass mask to follow cursor
+                // Move stained glass mask
                 if (glass) {
                     glass.style.setProperty('--glass-x', `${currentX}%`);
                     glass.style.setProperty('--glass-y', `${currentY}%`);
