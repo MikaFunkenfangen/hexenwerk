@@ -1628,6 +1628,149 @@ img { max-width: 100%; display: block; }
 
 
 /* ============================================================
+   ESSAY SUBTITLE LINE
+   ============================================================ */
+
+.essay-subtitle-line {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    letter-spacing: 0.01em;
+}
+
+
+/* ============================================================
+   ESSAY DOWNLOAD — PDF button
+   ============================================================ */
+
+.essay-download {
+    max-width: var(--content-width);
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-lg);
+    text-align: center;
+}
+
+.essay-download-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    padding: var(--space-sm) var(--space-lg);
+    border: 1px solid var(--border-accent);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.essay-download-link:hover {
+    background: var(--accent-dim);
+    color: var(--accent-light);
+    border-color: var(--accent-light);
+}
+
+.essay-download-icon {
+    font-size: 1.1rem;
+}
+
+
+/* ============================================================
+   PRINT STYLES — Clean PDF output
+   ============================================================ */
+
+@media print {
+    /* Hide navigation, footer, download button, effects */
+    .site-nav,
+    .site-footer,
+    .essay-footer,
+    .essay-download,
+    .essay-hero-tags,
+    .skip-link,
+    .hero-grain,
+    .hero-stained-glass,
+    .hero-cursor-light,
+    .scroll-marquee {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        color: #1a1612;
+        font-size: 11pt;
+        line-height: 1.6;
+    }
+
+    .essay-hero {
+        background: none;
+        min-height: auto;
+        padding: 2cm 0 1cm;
+    }
+
+    .essay-hero-overlay { display: none; }
+
+    .essay-hero-title {
+        color: #1a1612;
+        font-size: 24pt;
+        text-shadow: none;
+        animation: none;
+        opacity: 1;
+    }
+
+    .essay-hero-meta {
+        color: #4a4540;
+    }
+
+    .essay-subtitle-line {
+        color: #4a4540;
+    }
+
+    .essay-body {
+        max-width: none;
+        padding: 0 2cm;
+    }
+
+    .essay-body p {
+        color: #1a1612;
+        font-size: 11pt;
+        orphans: 3;
+        widows: 3;
+    }
+
+    .essay-pullquote {
+        border-left-color: #1a1612;
+        page-break-inside: avoid;
+    }
+
+    .essay-pullquote p {
+        color: #1a1612;
+    }
+
+    .essay-separator::before {
+        color: #6b6760;
+    }
+
+    .essay-closing {
+        page-break-before: avoid;
+    }
+
+    /* Page margins and header */
+    @page {
+        margin: 2.5cm 2cm;
+    }
+
+    @page :first {
+        margin-top: 1cm;
+    }
+}
+
+
+/* ============================================================
    DARK ACADEMIA — Renaissance-inflected details
    ============================================================ */
 
