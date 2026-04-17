@@ -815,7 +815,8 @@ img { max-width: 100%; display: block; }
 .section-claim {
     font-family: var(--font-archaic);
     font-style: italic;
-    font-size: 1.15rem;
+    font-size: clamp(1.8rem, 5.5vw, 3rem);
+    line-height: 1.15;
     color: var(--accent-light);
     margin-bottom: var(--space-md);
     letter-spacing: 0.015em;
@@ -1732,6 +1733,14 @@ img { max-width: 100%; display: block; }
     justify-content: space-between;
     align-items: flex-start;
     gap: var(--space-lg);
+}
+
+.footer-logo {
+    display: block;
+    height: clamp(80px, 18vw, 140px);
+    width: auto;
+    margin-bottom: var(--space-sm);
+    border-radius: 4px;
 }
 
 .footer-title {
