@@ -2869,8 +2869,10 @@ img { max-width: 100%; display: block; }
     z-index: 10000;
     background: #f0ebe4;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: clamp(1.5rem, 4vh, 3.5rem);
     overflow: hidden;
     isolation: isolate;
 }
@@ -2913,16 +2915,15 @@ body.intro-active {
     100% { transform: scale(1.05) rotate(0deg); }
 }
 
-/* Logo-Bild — maximal groß, zentriert, weich ein- und ausfadend */
+/* Logo-Bild — im Flex-Stack zentriert, weich ein- und ausfadend */
 .intro-logo {
     position: relative;
     z-index: 2;
     display: block;
-    width: min(88vw, 720px);
-    max-height: 62vh;
+    flex-shrink: 0;
+    width: min(82vw, 560px);
+    max-height: 52vh;
     object-fit: contain;
-    /* Platz nach unten für Eintreten-Button + Prozent reservieren */
-    margin-bottom: clamp(6rem, 18vh, 10rem);
     opacity: 0;
     transform: scale(0.94);
     transition: opacity 5s var(--ease-out), transform 7s var(--ease-out);
@@ -2931,8 +2932,8 @@ body.intro-active {
 
 @media (min-width: 900px) {
     .intro-logo {
-        max-height: 58vh;
-        width: min(56vh, 560px);
+        max-height: 48vh;
+        width: min(48vh, 480px);
     }
 }
 
@@ -2973,17 +2974,16 @@ body.intro-active {
     text-align: right;
 }
 
-/* Willkommens-Typographie */
+/* Willkommens-Typographie — im Flex-Stack unter dem Logo */
 .intro-welcome {
-    position: absolute;
+    position: relative;
     z-index: 3;
-    left: 0;
-    right: 0;
-    top: clamp(2.5rem, 9vh, 6rem);
+    flex-shrink: 0;
     text-align: center;
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-6px);
     transition: opacity 1.4s var(--ease-out), transform 1.4s var(--ease-out);
+    max-width: 92vw;
 }
 
 .intro-overlay[data-welcome-in] .intro-welcome {
