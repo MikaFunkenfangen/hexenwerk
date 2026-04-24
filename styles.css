@@ -757,8 +757,8 @@ img { max-width: 100%; display: block; }
 
 .intro-text-secondary {
     font-family: var(--font-archaic);
-    font-size: 1.1rem;
-    line-height: 1.75;
+    font-size: 1.32rem;
+    line-height: 1.7;
     color: var(--text-dark-secondary);
     font-feature-settings: 'onum' 1, 'liga' 1, 'dlig' 1, 'kern' 1;
 }
