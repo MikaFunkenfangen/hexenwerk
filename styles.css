@@ -185,6 +185,16 @@ img { max-width: 100%; display: block; }
 .nav-links {
     display: flex;
     gap: var(--space-md);
+    align-items: center;
+}
+
+.nav-external {
+    opacity: 0.82;
+    transition: opacity 0.3s ease;
+}
+
+.nav-external:hover {
+    opacity: 1;
 }
 
 .nav-links a {
