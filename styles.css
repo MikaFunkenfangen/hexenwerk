@@ -1885,81 +1885,9 @@ img { max-width: 100%; display: block; }
    ============================================================ */
 
 .site-footer {
-    position: relative;
-    overflow: hidden;
     border-top: 1px solid var(--border);
     padding: var(--space-xl) var(--space-lg) var(--space-lg);
     margin-top: var(--space-xl);
-    isolation: isolate;
-}
-
-/* Footer-Buntglas-Scheinwerfer — folgt Cursor / Touch.
-   Gleiche Mask-Mechanik wie .hero-stained-glass, kleinerer Radius. */
-.footer-stained-glass {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 1.2s var(--ease-out);
-    mix-blend-mode: screen;
-    -webkit-mask-image: radial-gradient(
-        circle 380px at var(--glass-x, 50%) var(--glass-y, 50%),
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,0.7) 22%,
-        rgba(0,0,0,0.35) 45%,
-        rgba(0,0,0,0.1) 65%,
-        rgba(0,0,0,0) 80%
-    );
-    mask-image: radial-gradient(
-        circle 380px at var(--glass-x, 50%) var(--glass-y, 50%),
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,0.7) 22%,
-        rgba(0,0,0,0.35) 45%,
-        rgba(0,0,0,0.1) 65%,
-        rgba(0,0,0,0) 80%
-    );
-}
-
-.footer-stained-glass.is-active {
-    opacity: 0.55;
-}
-
-.footer-stained-glass-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    filter: brightness(0.9) saturate(1.1);
-}
-
-@media (max-width: 640px) {
-    .footer-stained-glass {
-        -webkit-mask-image: radial-gradient(
-            circle 240px at var(--glass-x, 50%) var(--glass-y, 50%),
-            rgba(0,0,0,1) 0%,
-            rgba(0,0,0,0.6) 25%,
-            rgba(0,0,0,0.2) 55%,
-            rgba(0,0,0,0) 75%
-        );
-        mask-image: radial-gradient(
-            circle 240px at var(--glass-x, 50%) var(--glass-y, 50%),
-            rgba(0,0,0,1) 0%,
-            rgba(0,0,0,0.6) 25%,
-            rgba(0,0,0,0.2) 55%,
-            rgba(0,0,0,0) 75%
-        );
-    }
-    .footer-stained-glass.is-active {
-        opacity: 0.45;
-    }
-}
-
-/* Footer-Inhalt klar über dem Glaslicht */
-.site-footer > .footer-inner,
-.site-footer > .footer-bottom {
-    position: relative;
-    z-index: 1;
 }
 
 .footer-inner {
@@ -1988,10 +1916,20 @@ img { max-width: 100%; display: block; }
 }
 
 .footer-description {
-    font-size: 0.82rem;
-    line-height: 1.6;
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+    font-weight: 500;
+    font-style: italic;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
     color: var(--text-muted);
     max-width: 400px;
+    margin-top: var(--space-xs);
+    padding-bottom: 0.08em;
+}
+
+.footer-description.glass-text {
+    color: transparent;
 }
 
 .footer-contact {
