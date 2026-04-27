@@ -1916,10 +1916,20 @@ img { max-width: 100%; display: block; }
 }
 
 .footer-description {
-    font-size: 0.82rem;
-    line-height: 1.6;
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+    font-weight: 500;
+    font-style: italic;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
     color: var(--text-muted);
     max-width: 400px;
+    margin-top: var(--space-xs);
+    padding-bottom: 0.08em;
+}
+
+.footer-description.glass-text {
+    color: transparent;
 }
 
 .footer-contact {
