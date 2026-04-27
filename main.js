@@ -970,8 +970,8 @@
             textNodes.forEach(tn => {
                 // Split on regular whitespace; preserve nbsp inside words
                 const parts = tn.nodeValue.split(/( +|\t+|\n+)/);
-                if (parts.length <= 1) return;
                 const frag = document.createDocumentFragment();
+                let producedWord = false;
                 parts.forEach(part => {
                     if (!part.length) return;
                     if (/^[ \t\n]+$/.test(part)) {
@@ -982,9 +982,10 @@
                         span.textContent = part;
                         frag.appendChild(span);
                         words.push(span);
+                        producedWord = true;
                     }
                 });
-                tn.parentNode.replaceChild(frag, tn);
+                if (producedWord) tn.parentNode.replaceChild(frag, tn);
             });
             return words;
         }
