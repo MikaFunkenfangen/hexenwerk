@@ -937,6 +937,145 @@
 
 
     /* ============================================================
+       15. WORD-SCRUB — scroll-driven word illumination
+       Wörter in Projekt-Seiten-Absätzen starten gedimmt (0.18),
+       leuchten sequenziell auf 1.0, wenn sie durchs Lesefenster
+       wandern, fallen danach auf 0.4 zurück.
+       Pro Frame nur ein getBoundingClientRect je Absatz; die Wörter
+       eines nicht-sichtbaren Absatzes werden komplett übersprungen.
+       Stop-Token: ticking-Flag + visibilitychange + reduced-motion.
+       ============================================================ */
+    function initWordScrub() {
+        if (REDUCED_MOTION) return;
+
+        // Nur auf der Projekt-Seite aktiv
+        const root = document.querySelector('#projekt-content');
+        if (!root) return;
+
+        const paragraphs = root.querySelectorAll('.projekt-section > p');
+        if (!paragraphs.length) return;
+
+        const DIM_DEFAULT = 0.18;
+        const DIM_AFTER   = 0.40;
+
+        // Wrap each text-node word in a span without breaking inline elements
+        function splitWords(el) {
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+            const textNodes = [];
+            let node;
+            while ((node = walker.nextNode())) {
+                if (node.nodeValue.trim().length) textNodes.push(node);
+            }
+            const words = [];
+            textNodes.forEach(tn => {
+                // Split on regular whitespace; preserve nbsp inside words
+                const parts = tn.nodeValue.split(/( +|\t+|\n+)/);
+                if (parts.length <= 1) return;
+                const frag = document.createDocumentFragment();
+                parts.forEach(part => {
+                    if (!part.length) return;
+                    if (/^[ \t\n]+$/.test(part)) {
+                        frag.appendChild(document.createTextNode(part));
+                    } else {
+                        const span = document.createElement('span');
+                        span.className = 'word-scrub';
+                        span.textContent = part;
+                        frag.appendChild(span);
+                        words.push(span);
+                    }
+                });
+                tn.parentNode.replaceChild(frag, tn);
+            });
+            return words;
+        }
+
+        // Build paragraph state
+        const state = [];
+        paragraphs.forEach(p => {
+            const words = splitWords(p);
+            if (words.length) state.push({ p, words, lastBucket: null });
+        });
+        if (!state.length) return;
+
+        let ticking = false;
+        let pageVisible = !document.hidden;
+
+        function setAll(words, value, key) {
+            // Flush only if bucket changed — avoids touching DOM every offscreen frame
+            for (let i = 0; i < words.length; i++) {
+                words[i].style.opacity = value;
+            }
+            return key;
+        }
+
+        function update() {
+            ticking = false;
+            const vh = window.innerHeight;
+            const revStart   = vh * 0.85;   // Wörter unterhalb dieser Linie: gedimmter Default
+            const revFull    = vh * 0.42;   // ab hier voll erleuchtet
+            const fadeBegin  = vh * 0.18;   // ab hier beginnt das Zurückfallen
+
+            for (let s = 0; s < state.length; s++) {
+                const entry = state[s];
+                const pRect = entry.p.getBoundingClientRect();
+
+                // Komplett unter dem Viewport → default-dim (only set once)
+                if (pRect.top > vh + 50) {
+                    if (entry.lastBucket !== 'below') {
+                        entry.lastBucket = setAll(entry.words, String(DIM_DEFAULT), 'below');
+                    }
+                    continue;
+                }
+                // Komplett über dem Viewport → after-dim (only set once)
+                if (pRect.bottom < -50) {
+                    if (entry.lastBucket !== 'above') {
+                        entry.lastBucket = setAll(entry.words, String(DIM_AFTER), 'above');
+                    }
+                    continue;
+                }
+
+                entry.lastBucket = 'live';
+                const words = entry.words;
+                for (let i = 0; i < words.length; i++) {
+                    const w = words[i];
+                    const top = w.getBoundingClientRect().top;
+                    let opacity;
+                    if (top > revStart) {
+                        opacity = DIM_DEFAULT;
+                    } else if (top > revFull) {
+                        const t = (revStart - top) / (revStart - revFull);
+                        opacity = DIM_DEFAULT + t * (1 - DIM_DEFAULT);
+                    } else if (top > fadeBegin) {
+                        opacity = 1;
+                    } else {
+                        const t = Math.min(1, (fadeBegin - top) / fadeBegin);
+                        opacity = 1 - t * (1 - DIM_AFTER);
+                    }
+                    w.style.opacity = opacity.toFixed(3);
+                }
+            }
+        }
+
+        function schedule() {
+            if (!ticking && pageVisible) {
+                ticking = true;
+                requestAnimationFrame(update);
+            }
+        }
+
+        window.addEventListener('scroll', schedule, { passive: true });
+        window.addEventListener('resize', schedule, { passive: true });
+        document.addEventListener('visibilitychange', () => {
+            pageVisible = !document.hidden;
+            if (pageVisible) schedule();
+        });
+
+        // Initial paint
+        update();
+    }
+
+
+    /* ============================================================
        INIT
        ============================================================ */
     document.addEventListener('DOMContentLoaded', () => {
@@ -957,6 +1096,7 @@
         initSectionNumbers();
         initScrollEffects();
         initFocusBackdrop();
+        initWordScrub();
     });
 
 })();

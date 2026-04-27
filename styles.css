@@ -2934,6 +2934,25 @@ img { max-width: 100%; display: block; }
 
 
 /* ============================================================
+   WORD-SCRUB — scroll-driven word-by-word illumination
+   Auf der Projekt-Seite: Wörter starten gedimmt, leuchten beim
+   Hochscrollen sequenziell auf und fallen wieder zurück.
+   JS schreibt opacity per inline-style, dieses CSS setzt nur
+   den Default und sorgt für Layout-Verhalten.
+   ============================================================ */
+.word-scrub {
+    display: inline-block;
+    opacity: 0.18;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .word-scrub {
+        opacity: 1 !important;
+    }
+}
+
+
+/* ============================================================
    REDUCED MOTION — Respect user preference
    All motion becomes instant or minimal.
    ============================================================ */
