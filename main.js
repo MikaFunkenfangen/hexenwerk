@@ -948,11 +948,13 @@
     function initWordScrub() {
         if (REDUCED_MOTION) return;
 
-        // Nur auf der Projekt-Seite aktiv
-        const root = document.querySelector('#projekt-content');
-        if (!root) return;
-
-        const paragraphs = root.querySelectorAll('.projekt-section > p');
+        // Greift auf:
+        //   - .intro-section auf der Homepage ("Das Projekt"-Block)
+        //   - #projekt-content auf projekt.html
+        const paragraphs = document.querySelectorAll(
+            '.intro-section .intro-inner > p, ' +
+            '#projekt-content .projekt-section > p'
+        );
         if (!paragraphs.length) return;
 
         const DIM_DEFAULT = 0.18;
