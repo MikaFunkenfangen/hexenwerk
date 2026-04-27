@@ -88,8 +88,10 @@
     --wide-width:     960px;
     --max-width:      1200px;
 
-    --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
     --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+    --ease-snap:   cubic-bezier(0.23, 1, 0.32, 1);   /* stärkerer ease-out für UI-Interaktionen */
+    --ease-press:  cubic-bezier(0.4, 0, 0.2, 1);     /* press/release Feedback */
 
     /* Motion timing — unified vocabulary */
     --dur-micro:    300ms;  /* hover, click feedback */
@@ -170,10 +172,19 @@ img { max-width: 100%; display: block; }
     font-weight: 500;
     letter-spacing: 0.04em;
     color: var(--text-secondary);
-    transition: opacity 0.3s ease, color 0.3s ease;
+    transition:
+        opacity 200ms var(--ease-snap),
+        color 200ms var(--ease-snap),
+        transform 140ms var(--ease-press);
 }
 
-.nav-logo:hover { color: var(--text-primary); opacity: 0.85; }
+@media (hover: hover) and (pointer: fine) {
+    .nav-logo:hover { color: var(--text-primary); opacity: 0.85; }
+}
+
+.nav-logo:active {
+    transform: scale(0.97);
+}
 
 .nav-logo-img {
     display: block;
@@ -190,11 +201,13 @@ img { max-width: 100%; display: block; }
 
 .nav-external {
     opacity: 0.82;
-    transition: opacity 0.3s ease;
+    transition: opacity 200ms var(--ease-snap);
 }
 
-.nav-external:hover {
-    opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+    .nav-external:hover {
+        opacity: 1;
+    }
 }
 
 .nav-links a {
@@ -204,10 +217,12 @@ img { max-width: 100%; display: block; }
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-muted);
-    transition: color 0.3s ease;
+    transition: color 200ms var(--ease-snap);
 }
 
-.nav-links a:hover { color: var(--text-primary); }
+@media (hover: hover) and (pointer: fine) {
+    .nav-links a:hover { color: var(--text-primary); }
+}
 
 
 /* ============================================================
@@ -806,11 +821,13 @@ img { max-width: 100%; display: block; }
     gap: var(--space-sm);
     padding: var(--space-md);
     background: var(--bg-deep);
-    transition: background 0.4s ease;
+    transition: background 240ms var(--ease-snap);
 }
 
-.perspectives-list li:hover {
-    background: var(--bg-elevated);
+@media (hover: hover) and (pointer: fine) {
+    .perspectives-list li:hover {
+        background: var(--bg-elevated);
+    }
 }
 
 .perspective-number {
@@ -897,11 +914,13 @@ img { max-width: 100%; display: block; }
     gap: var(--space-lg);
     padding: var(--space-md);
     border-radius: 4px;
-    transition: background-color 0.5s ease;
+    transition: background-color 280ms var(--ease-snap);
 }
 
-.essay-card:hover {
-    background-color: var(--bg-card-hover);
+@media (hover: hover) and (pointer: fine) {
+    .essay-card:hover {
+        background-color: var(--bg-card-hover);
+    }
 }
 
 .essay-card-image {
@@ -930,9 +949,11 @@ img { max-width: 100%; display: block; }
     z-index: 3;
 }
 
-.essay-card:hover .essay-card-image::after,
-.essay-card-image:hover::after {
-    opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+    .essay-card:hover .essay-card-image::after,
+    .essay-card-image:hover::after {
+        opacity: 1;
+    }
 }
 
 .essay-card-img {
@@ -940,12 +961,21 @@ img { max-width: 100%; display: block; }
     height: 100%;
     object-fit: cover;
     filter: brightness(0.75) saturate(0.7);
-    transition: filter 0.6s var(--ease-smooth), transform 0.8s var(--ease-out);
+    transition:
+        filter 280ms var(--ease-snap),
+        transform 400ms var(--ease-out);
 }
 
-.essay-card:hover .essay-card-img {
-    filter: brightness(0.85) saturate(0.85);
-    transform: scale(1.03);
+@media (hover: hover) and (pointer: fine) {
+    .essay-card:hover .essay-card-img {
+        filter: brightness(0.85) saturate(0.85);
+        transform: scale(1.03);
+    }
+}
+
+.essay-card:active {
+    transform: scale(0.99);
+    transition: transform 120ms var(--ease-press);
 }
 
 .essay-card-content {
@@ -981,11 +1011,13 @@ img { max-width: 100%; display: block; }
     line-height: 1.3;
     color: var(--text-primary);
     margin-bottom: var(--space-sm);
-    transition: color 0.3s ease;
+    transition: color 200ms var(--ease-snap);
 }
 
-.essay-card:hover .essay-card-title {
-    color: var(--accent-light);
+@media (hover: hover) and (pointer: fine) {
+    .essay-card:hover .essay-card-title {
+        color: var(--accent-light);
+    }
 }
 
 .essay-card-excerpt {
@@ -1031,14 +1063,16 @@ img { max-width: 100%; display: block; }
 .exkurse-item {
     padding: var(--space-lg);
     background: var(--bg-light);
-    transition: background 0.5s ease;
+    transition: background 240ms var(--ease-snap);
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
 }
 
-.exkurse-item:hover {
-    background: var(--bg-light-warm);
+@media (hover: hover) and (pointer: fine) {
+    .exkurse-item:hover {
+        background: var(--bg-light-warm);
+    }
 }
 
 .exkurse-meta {
@@ -1069,11 +1103,13 @@ img { max-width: 100%; display: block; }
     font-weight: 500;
     line-height: 1.4;
     color: var(--text-dark);
-    transition: color 0.3s ease;
+    transition: color 240ms var(--ease-snap);
 }
 
-.exkurse-item:hover .exkurse-title {
-    color: var(--accent-on-light);
+@media (hover: hover) and (pointer: fine) {
+    .exkurse-item:hover .exkurse-title {
+        color: var(--accent-on-light);
+    }
 }
 
 .exkurse-title em {
@@ -1190,12 +1226,21 @@ img { max-width: 100%; display: block; }
     color: var(--accent-on-light);
     border-bottom: 1px solid rgba(138, 101, 8, 0.3);
     padding-bottom: 2px;
-    transition: color 0.3s ease, border-color 0.3s ease;
+    transition:
+        color 200ms var(--ease-snap),
+        border-color 200ms var(--ease-snap),
+        transform 140ms var(--ease-press);
 }
 
-.focus-link:hover {
-    color: var(--text-dark);
-    border-bottom-color: var(--text-dark);
+@media (hover: hover) and (pointer: fine) {
+    .focus-link:hover {
+        color: var(--text-dark);
+        border-bottom-color: var(--text-dark);
+    }
+}
+
+.focus-link:active {
+    transform: scale(0.97);
 }
 
 
@@ -1490,12 +1535,20 @@ img { max-width: 100%; display: block; }
 .essay-back-link {
     font-size: 0.85rem;
     color: var(--text-muted);
-    transition: color 0.3s ease;
+    transition:
+        color 200ms var(--ease-snap),
+        transform 140ms var(--ease-press);
     display: inline-block;
     margin-bottom: var(--space-xl);
 }
 
-.essay-back-link:hover { color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+    .essay-back-link:hover { color: var(--accent); }
+}
+
+.essay-back-link:active {
+    transform: scale(0.97);
+}
 
 .references-title {
     font-family: var(--font-display);
@@ -1596,12 +1649,14 @@ img { max-width: 100%; display: block; }
     transition: transform 600ms var(--ease-out), box-shadow 600ms var(--ease-out);
 }
 
-.ueber-portrait:hover {
-    transform: perspective(1200px) rotateY(0deg) translateY(-2px);
-    box-shadow:
-        0 40px 80px -24px rgba(0, 0, 0, 0.6),
-        0 16px 32px -10px rgba(0, 0, 0, 0.4),
-        inset 0 0 0 1px rgba(212, 160, 73, 0.25);
+@media (hover: hover) and (pointer: fine) {
+    .ueber-portrait:hover {
+        transform: perspective(1200px) rotateY(0deg) translateY(-2px);
+        box-shadow:
+            0 40px 80px -24px rgba(0, 0, 0, 0.6),
+            0 16px 32px -10px rgba(0, 0, 0, 0.4),
+            inset 0 0 0 1px rgba(212, 160, 73, 0.25);
+    }
 }
 
 .ueber-portrait-img {
@@ -1806,12 +1861,16 @@ img { max-width: 100%; display: block; }
     color: var(--accent-on-light);
     border-bottom: 1px solid rgba(138, 101, 8, 0.3);
     padding-bottom: 1px;
-    transition: color 0.3s ease, border-color 0.3s ease;
+    transition:
+        color 200ms var(--ease-snap),
+        border-color 200ms var(--ease-snap);
 }
 
-.legal-link:hover {
-    color: var(--text-dark);
-    border-bottom-color: var(--text-dark);
+@media (hover: hover) and (pointer: fine) {
+    .legal-link:hover {
+        color: var(--text-dark);
+        border-bottom-color: var(--text-dark);
+    }
 }
 
 @media (max-width: 640px) {
@@ -1898,11 +1957,13 @@ img { max-width: 100%; display: block; }
     font-size: 0.72rem;
     color: var(--text-muted);
     letter-spacing: 0.04em;
-    transition: color 0.3s ease;
+    transition: color 200ms var(--ease-snap);
 }
 
-.footer-legal-links a:hover {
-    color: var(--accent);
+@media (hover: hover) and (pointer: fine) {
+    .footer-legal-links a:hover {
+        color: var(--accent);
+    }
 }
 
 
@@ -2012,7 +2073,15 @@ img { max-width: 100%; display: block; }
     padding: var(--space-sm) var(--space-lg);
     border: 1px solid var(--border-accent);
     border-radius: 2px;
-    transition: all 0.3s ease;
+    transition:
+        background 200ms var(--ease-snap),
+        color 200ms var(--ease-snap),
+        border-color 200ms var(--ease-snap),
+        transform 140ms var(--ease-press);
+}
+
+.essay-download-link:active {
+    transform: scale(0.97);
 }
 
 .essay-download-link:hover {
@@ -2584,6 +2653,11 @@ img { max-width: 100%; display: block; }
     z-index: 101;
     flex-direction: column;
     gap: 5px;
+    transition: transform 140ms var(--ease-press);
+}
+
+.nav-toggle:active {
+    transform: scale(0.92);
 }
 
 .nav-toggle-bar {
@@ -2591,7 +2665,9 @@ img { max-width: 100%; display: block; }
     width: 22px;
     height: 1.5px;
     background: var(--text-secondary);
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition:
+        transform 240ms var(--ease-snap),
+        opacity 200ms var(--ease-snap);
 }
 
 /* Hamburger → X transformation */
@@ -2652,17 +2728,23 @@ img { max-width: 100%; display: block; }
     opacity: 0.7;
 }
 
-.essay-card--upcoming:hover {
-    background-color: transparent;
+@media (hover: hover) and (pointer: fine) {
+    .essay-card--upcoming:hover {
+        background-color: transparent;
+    }
+
+    .essay-card--upcoming:hover .essay-card-img {
+        filter: brightness(0.75) saturate(0.7);
+        transform: none;
+    }
+
+    .essay-card--upcoming:hover .essay-card-title {
+        color: var(--text-primary);
+    }
 }
 
-.essay-card--upcoming:hover .essay-card-img {
-    filter: brightness(0.75) saturate(0.7);
+.essay-card--upcoming:active {
     transform: none;
-}
-
-.essay-card--upcoming:hover .essay-card-title {
-    color: var(--text-primary);
 }
 
 
@@ -2714,12 +2796,21 @@ img { max-width: 100%; display: block; }
     padding: var(--space-xs) var(--space-md);
     border: 1px solid var(--border);
     border-radius: 2px;
-    transition: border-color 0.3s ease, color 0.3s ease;
+    transition:
+        border-color 200ms var(--ease-snap),
+        color 200ms var(--ease-snap),
+        transform 140ms var(--ease-press);
 }
 
-.motifs-cloud li a:hover {
-    border-color: var(--accent);
-    color: var(--accent-light);
+@media (hover: hover) and (pointer: fine) {
+    .motifs-cloud li a:hover {
+        border-color: var(--accent);
+        color: var(--accent-light);
+    }
+}
+
+.motifs-cloud li a:active {
+    transform: scale(0.97);
 }
 
 .motif-count {
@@ -2766,12 +2857,21 @@ img { max-width: 100%; display: block; }
     padding: 0.25rem 0.7rem;
     border: 1px solid var(--border);
     border-radius: 2px;
-    transition: border-color 0.3s ease, color 0.3s ease;
+    transition:
+        border-color 200ms var(--ease-snap),
+        color 200ms var(--ease-snap),
+        transform 140ms var(--ease-press);
 }
 
-.essay-motifs .motif-link:hover {
-    border-color: var(--accent);
-    color: var(--accent-light);
+@media (hover: hover) and (pointer: fine) {
+    .essay-motifs .motif-link:hover {
+        border-color: var(--accent);
+        color: var(--accent-light);
+    }
+}
+
+.essay-motifs .motif-link:active {
+    transform: scale(0.97);
 }
 
 
@@ -3060,9 +3160,19 @@ body.intro-active {
     font-feature-settings: 'smcp' 1;
 }
 
-.intro-enter:hover {
-    background: var(--accent-on-light);
-    color: var(--bg-light);
+@media (hover: hover) and (pointer: fine) {
+    .intro-enter:hover {
+        background: var(--accent-on-light);
+        color: var(--bg-light);
+    }
+}
+
+.intro-enter:active {
+    transform: translateX(-50%) scale(0.97);
+    transition:
+        background 200ms var(--ease-snap),
+        color 200ms var(--ease-snap),
+        transform 120ms var(--ease-press);
 }
 
 .intro-overlay[data-started] .intro-enter {
@@ -3086,15 +3196,24 @@ body.intro-active {
     padding: 0.5rem 0;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 1.2s var(--ease-out), color 0.4s ease;
+    transition:
+        opacity 1.2s var(--ease-out),
+        color 200ms var(--ease-snap),
+        transform 140ms var(--ease-press);
 }
 
 .intro-overlay[data-started] .intro-skip {
     opacity: 1;
 }
 
-.intro-skip:hover {
-    color: var(--accent-on-light);
+@media (hover: hover) and (pointer: fine) {
+    .intro-skip:hover {
+        color: var(--accent-on-light);
+    }
+}
+
+.intro-skip:active {
+    transform: scale(0.95);
 }
 
 /* Reduced motion: kein Zoom der Stainedglass-Ebene */
