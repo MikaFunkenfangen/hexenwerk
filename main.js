@@ -662,6 +662,117 @@
 
 
     /* ============================================================
+       11a-2. FOOTER STAINED-GLASS — cursor/touch-follow Buntglas-Scheinwerfer
+       Gleiche Optik wie Hero, kleiner Radius, lerp-Smoothing.
+       Pausiert wenn nicht im Viewport oder Tab im Hintergrund.
+       ============================================================ */
+    function initFooterStainedGlass() {
+        if (REDUCED_MOTION) return;
+
+        const footer = document.querySelector('.site-footer');
+        const glass = document.querySelector('.footer-stained-glass');
+        if (!footer || !glass) return;
+
+        let currentX = 50, currentY = 50;
+        let targetX = 50, targetY = 50;
+        let active = false;       // pointer/touch is over the footer
+        let inView = false;       // footer is in viewport
+        let pageVisible = !document.hidden;
+        let rafId = null;
+
+        function shouldRun() {
+            return active && inView && pageVisible;
+        }
+
+        function tick() {
+            if (!shouldRun()) {
+                rafId = null;
+                return;
+            }
+            currentX += (targetX - currentX) * 0.08;
+            currentY += (targetY - currentY) * 0.08;
+            glass.style.setProperty('--glass-x', currentX.toFixed(2) + '%');
+            glass.style.setProperty('--glass-y', currentY.toFixed(2) + '%');
+            rafId = requestAnimationFrame(tick);
+        }
+
+        function start() {
+            if (rafId == null && shouldRun()) {
+                rafId = requestAnimationFrame(tick);
+            }
+        }
+
+        function activate() {
+            if (active) return;
+            active = true;
+            glass.classList.add('is-active');
+            start();
+        }
+
+        function deactivate() {
+            if (!active) return;
+            active = false;
+            glass.classList.remove('is-active');
+            // tick() will see !shouldRun() and exit on its own
+        }
+
+        // --- IntersectionObserver: Footer in/out of view ---
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                inView = entry.isIntersecting;
+                if (inView) {
+                    start();
+                } else {
+                    // Hide softly when scrolling away
+                    deactivate();
+                }
+            });
+        }, { threshold: 0 });
+        io.observe(footer);
+
+        // --- visibilitychange: pause when tab hidden ---
+        document.addEventListener('visibilitychange', () => {
+            pageVisible = !document.hidden;
+            if (pageVisible) start();
+        });
+
+        // --- Desktop pointer ---
+        footer.addEventListener('mouseenter', () => {
+            activate();
+        });
+        footer.addEventListener('mouseleave', () => {
+            deactivate();
+        });
+        footer.addEventListener('mousemove', (e) => {
+            const rect = footer.getBoundingClientRect();
+            targetX = ((e.clientX - rect.left) / rect.width) * 100;
+            targetY = ((e.clientY - rect.top) / rect.height) * 100;
+        }, { passive: true });
+
+        // --- Touch ---
+        footer.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const rect = footer.getBoundingClientRect();
+            targetX = ((touch.clientX - rect.left) / rect.width) * 100;
+            targetY = ((touch.clientY - rect.top) / rect.height) * 100;
+            activate();
+        }, { passive: true });
+
+        footer.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const rect = footer.getBoundingClientRect();
+            targetX = ((touch.clientX - rect.left) / rect.width) * 100;
+            targetY = ((touch.clientY - rect.top) / rect.height) * 100;
+        }, { passive: true });
+
+        footer.addEventListener('touchend', () => {
+            // Halte den Schein noch kurz, dann ausblenden
+            setTimeout(deactivate, 1400);
+        });
+    }
+
+
+    /* ============================================================
        11b. PARTICLE FIELDS — schwebende Lichtpartikel auf dunklen Sektionen
        Canvas-basiert, pausiert wenn nicht im Viewport, respektiert
        prefers-reduced-motion und visibilitychange.
@@ -954,6 +1065,7 @@
         initScrollMarquee();
         initParticleFields();
         initCardSpotlight();
+        initFooterStainedGlass();
         initSectionNumbers();
         initScrollEffects();
         initFocusBackdrop();
