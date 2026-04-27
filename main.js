@@ -21,6 +21,38 @@
 
 
     /* ============================================================
+       INITIAL SCROLL POSITION — Startseite immer beim Header beginnen
+       - scrollRestoration auf 'manual': Browser merkt sich Scroll
+         position nicht über Reloads
+       - Bei Reload/Back-Forward: Hash strippen + nach oben, mehrfach
+         (forceTop bei IIFE, rAF, DOMContentLoaded und load), damit der
+         Browser keine Chance bekommt, zur erinnerten Position zurück-
+         zuspringen
+       - Anchor-Klicks aus dem Menü (type === 'navigate') behalten
+         ihren Sprung zur Sektion — Standardverhalten bleibt erhalten
+       ============================================================ */
+    (function fixInitialScroll() {
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        const nav = performance.getEntriesByType &&
+                    performance.getEntriesByType('navigation')[0];
+        if (!nav) return;
+        const shouldReset = nav.type === 'reload' || nav.type === 'back_forward';
+        if (!shouldReset) return;
+
+        if (location.hash) {
+            history.replaceState(null, '', location.pathname + location.search);
+        }
+        const forceTop = () => window.scrollTo(0, 0);
+        forceTop();
+        requestAnimationFrame(forceTop);
+        document.addEventListener('DOMContentLoaded', forceTop, { once: true });
+        window.addEventListener('load', forceTop, { once: true });
+    })();
+
+
+    /* ============================================================
        1. SCROLL REVEALS – staggered, proportional to position
        Each section's children animate in with slight offsets.
        Uses data-reveal-delay to allow author-set timing.
@@ -357,6 +389,34 @@
             img.addEventListener('error', () => {
                 // Still show the image area even if load fails
                 img.classList.add('is-loaded');
+            });
+        });
+    }
+
+
+    /* ============================================================
+       8b. NAV LOGO — Klick auf Homepage scrollt nach oben
+       Wenn man bereits auf index.html ist und das Logo klickt,
+       sanft zur Top scrollen + Hash entfernen, statt der Browser-
+       Default 'no-op'.
+       ============================================================ */
+    function initNavLogoToTop() {
+        const navLogos = document.querySelectorAll('.nav-logo');
+        if (!navLogos.length) return;
+
+        function isOnHome() {
+            const p = location.pathname;
+            return p === '/' || p === '' || p.endsWith('/index.html');
+        }
+
+        navLogos.forEach(logo => {
+            logo.addEventListener('click', (e) => {
+                if (!isOnHome()) return;
+                e.preventDefault();
+                if (location.hash) {
+                    history.replaceState(null, '', location.pathname + location.search);
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         });
     }
@@ -1092,6 +1152,7 @@
         initSmoothAnchors();
         initImageLoading();
         initNavToggle();
+        initNavLogoToTop();
         initIntroOverlay();
         initScrollMarquee();
         initParticleFields();
