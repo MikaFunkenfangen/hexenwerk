@@ -320,18 +320,28 @@
     function initCursorLight() {
         if (REDUCED_MOTION) return;
 
+        // Startseite mit warmem Streulicht, die Unterseiten-Header nur mit
+        // dem Buntglas-Fenster — dort ist der Header flacher und soll ruhig
+        // bleiben.
         const hero = document.querySelector('.hero');
-        if (!hero) return;
+        if (hero) setupGlassLight(hero, true);
+        document.querySelectorAll('.projekt-hero').forEach(header => {
+            setupGlassLight(header, false);
+        });
+    }
 
-        const glass = hero.querySelector('.hero-stained-glass');
+    function setupGlassLight(hero, withWarmLight) {
+        const glass = hero.querySelector('.hero-stained-glass, .page-hero-glass');
         const glassWindow = hero.querySelector('.stained-glass-window');
-        const glassImg = hero.querySelector('.stained-glass-img');
+        const glassImg = glassWindow
+            ? glassWindow.querySelector('.stained-glass-img')
+            : null;
 
         // Warmes Streulicht — nur Desktop, nur auf leistungsfaehigen Geraeten.
         // Es liegt im mix-blend-mode: screen und ist damit der teuerste
         // Einzeleffekt im Hero.
         let light = null;
-        if (!IS_TOUCH && !LOW_PERF) {
+        if (withWarmLight && !IS_TOUCH && !LOW_PERF) {
             light = document.createElement('div');
             light.className = 'hero-cursor-light';
             hero.appendChild(light);

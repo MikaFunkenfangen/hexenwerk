@@ -417,7 +417,8 @@ img { max-width: 100%; display: block; }
     );
 }
 
-.hero-stained-glass.is-active .stained-glass-window {
+.hero-stained-glass.is-active .stained-glass-window,
+.page-hero-glass.is-active .stained-glass-window {
     opacity: 1;
 }
 
@@ -426,7 +427,9 @@ img { max-width: 100%; display: block; }
    Ebenen vorzubereiten. Dauerhaft gesetzt haelt will-change hier zwei
    grosse Texturen im Speicher, auch wenn nichts zu sehen ist. */
 .hero-stained-glass.is-active .stained-glass-window,
-.hero-stained-glass.is-active .stained-glass-img {
+.hero-stained-glass.is-active .stained-glass-img,
+.page-hero-glass.is-active .stained-glass-window,
+.page-hero-glass.is-active .stained-glass-img {
     will-change: transform;
 }
 
@@ -1732,6 +1735,10 @@ img { max-width: 100%; display: block; }
    sind und die Fläche dadurch dichter wirkt. Kein Cursor-Fenster:
    Diese Header sind Bild, keine Interaktion. */
 .page-hero-glass {
+    /* Kleiner als auf der Startseite: Diese Header sind nur rund ein
+       Drittel so hoch, ein 1100er Fenster würde sie komplett ausfüllen
+       und der Lichtfleck wäre nicht mehr als solcher zu erkennen. */
+    --glass-size: 640px;
     position: absolute;
     inset: 0;
     z-index: 0;
@@ -1750,6 +1757,12 @@ img { max-width: 100%; display: block; }
    Die Regel steht bewusst nach der Basisregel: Ein @media erhöht die
    Spezifität nicht, es zählt allein die Reihenfolge. */
 @media (max-width: 640px) {
+    /* Ein 640er Fenster wäre auf einem 375 px breiten Schirm breiter als
+       der Header — der Lichtfleck wäre dann kein Fleck mehr. */
+    .page-hero-glass {
+        --glass-size: 400px;
+    }
+
     /* Im Hochformat sind diese Header rund 780 px hoch statt 300 — die
        Prozentmarken des Querformat-Verlaufs decken dadurch ein Vielfaches
        an Fläche ab und löschen genau die Zonen, in denen die Maske Farbe
