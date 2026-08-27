@@ -2011,65 +2011,26 @@ img { max-width: 100%; display: block; }
    SITE FOOTER
    ============================================================ */
 
+/* Schmale Fußzeile: nur Rechtehinweis und die beiden Pflichtseiten.
+   Logo, Untertitel und Kontakthinweis sind bewusst raus — sie haben
+   unverhältnismäßig viel Höhe gekostet. */
 .site-footer {
     border-top: 1px solid var(--border);
-    padding: var(--space-xl) var(--space-lg) var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
     margin-top: var(--space-xl);
 }
 
-.footer-inner {
+.footer-bottom-inner {
     max-width: var(--max-width);
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--space-lg);
-}
-
-.footer-logo {
-    display: block;
-    height: clamp(80px, 18vw, 140px);
-    width: auto;
-    margin-bottom: var(--space-sm);
-    border-radius: 4px;
-}
-
-.footer-title {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: var(--space-xs);
-}
-
-.footer-description {
-    font-size: 0.82rem;
-    line-height: 1.6;
-    color: var(--text-muted);
-    max-width: 400px;
-}
-
-.footer-contact {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-}
-
-.footer-bottom {
-    max-width: var(--max-width);
-    margin: var(--space-lg) auto 0;
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--border);
-}
-
-.footer-bottom-inner {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: var(--space-sm);
+    gap: var(--space-xs) var(--space-md);
 }
 
-.footer-bottom p {
+.footer-bottom-inner p {
     font-size: 0.72rem;
     color: var(--text-muted);
     letter-spacing: 0.04em;
@@ -2552,15 +2513,6 @@ img { max-width: 100%; display: block; }
     font-size: 0.72rem;
 }
 
-/* --- Footer title --- */
-.footer-title {
-    font-family: var(--font-display);
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-}
-
 /* --- Kicker overlines — more calligraphic --- */
 .section-kicker,
 .hero-overline,
@@ -2727,7 +2679,11 @@ img { max-width: 100%; display: block; }
         padding: var(--space-lg) var(--space-md) var(--space-xl);
     }
 
-    .footer-inner { flex-direction: column; }
+    /* Auf schmalen Bildschirmen bricht die Fußzeile um — dann mittig */
+    .footer-bottom-inner {
+        justify-content: center;
+        text-align: center;
+    }
 }
 
 @media (max-width: 400px) {
