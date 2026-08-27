@@ -290,17 +290,42 @@ img { max-width: 100%; display: block; }
 }
 
 /* Stained glass window layer — illuminated by cursor */
-/* Stained glass — light pours through on cursor/touch.
-   Warm tone, large radius, works on all devices. */
+/* Buntglas-Fenster: Das Licht fällt dort durch, wo Cursor oder
+   Finger stehen.
+   Wichtig fürs Tempo: Die Maske sitzt auf einem fest großen
+   Fenster-Element und bleibt selbst unverändert. Bewegt wird nur
+   per transform — das Fenster nach vorn, das Bild um denselben
+   Betrag zurück. So rastert der Browser die Maske ein einziges Mal
+   und schiebt pro Frame nur noch fertige Ebenen. Vorher wurde die
+   Maske bildschirmfüllend in jedem Frame neu gezeichnet, was
+   schwache Geräte komplett ausgebremst hat. */
 .hero-stained-glass {
+    --glass-size: 1100px;
     position: absolute;
     inset: 0;
     z-index: 1;
+    overflow: hidden;
     pointer-events: none;
     opacity: 0;
     transition: opacity 1s var(--ease-out);
+}
+
+.hero-stained-glass.is-active {
+    opacity: 1;
+}
+
+.stained-glass-window {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--glass-size);
+    height: var(--glass-size);
+    margin-left: calc(var(--glass-size) / -2);
+    margin-top: calc(var(--glass-size) / -2);
+    /* Startposition: Bildmitte — JS übernimmt ab dem ersten Zeiger */
+    transform: translate3d(50vw, 50vh, 0);
     -webkit-mask-image: radial-gradient(
-        circle 550px at var(--glass-x, 50%) var(--glass-y, 50%),
+        circle closest-side at 50% 50%,
         rgba(0,0,0,1) 0%,
         rgba(0,0,0,0.75) 20%,
         rgba(0,0,0,0.4) 40%,
@@ -308,7 +333,7 @@ img { max-width: 100%; display: block; }
         rgba(0,0,0,0) 75%
     );
     mask-image: radial-gradient(
-        circle 550px at var(--glass-x, 50%) var(--glass-y, 50%),
+        circle closest-side at 50% 50%,
         rgba(0,0,0,1) 0%,
         rgba(0,0,0,0.75) 20%,
         rgba(0,0,0,0.4) 40%,
@@ -317,34 +342,37 @@ img { max-width: 100%; display: block; }
     );
 }
 
-.hero-stained-glass.is-active {
-    opacity: 1;
-}
-
 .stained-glass-img {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Maße des Hero-Bereichs — JS hält sie aktuell, die Fallbacks
+       greifen, solange noch kein Skript gelaufen ist. */
+    width: var(--hero-w, 100vw);
+    height: var(--hero-h, 100vh);
+    max-width: none;
     object-fit: cover;
     object-position: center 30%;
     filter: brightness(1.05) saturate(1.15);
+    transform: translate3d(
+        calc(var(--glass-size) / 2 - 50vw),
+        calc(var(--glass-size) / 2 - 50vh),
+        0
+    );
+}
+
+/* GPU-Ebenen erst anlegen, wenn das Fenster wirklich leuchtet. Die
+   Einblendung dauert eine Sekunde — Zeit genug fuer den Browser, die
+   Ebenen vorzubereiten. Dauerhaft gesetzt haelt will-change hier zwei
+   grosse Texturen im Speicher, auch wenn nichts zu sehen ist. */
+.hero-stained-glass.is-active .stained-glass-window,
+.hero-stained-glass.is-active .stained-glass-img {
+    will-change: transform;
 }
 
 @media (max-width: 640px) {
     .hero-stained-glass {
-        -webkit-mask-image: radial-gradient(
-            circle 300px at var(--glass-x, 50%) var(--glass-y, 50%),
-            rgba(0,0,0,1) 0%,
-            rgba(0,0,0,0.6) 25%,
-            rgba(0,0,0,0.2) 50%,
-            rgba(0,0,0,0) 70%
-        );
-        mask-image: radial-gradient(
-            circle 300px at var(--glass-x, 50%) var(--glass-y, 50%),
-            rgba(0,0,0,1) 0%,
-            rgba(0,0,0,0.6) 25%,
-            rgba(0,0,0,0.2) 50%,
-            rgba(0,0,0,0) 70%
-        );
+        --glass-size: 620px;
     }
 }
 
@@ -529,30 +557,45 @@ img { max-width: 100%; display: block; }
     font-weight: 400;
     letter-spacing: -0.02em;
     line-height: 1.1;
-    /* Same rainbow gradient as glass-text headlines — sharp & vivid */
+    /* Same rainbow gradient as glass-text headlines — sharp & vivid.
+       Die Sättigung steckt jetzt in den Farbwerten selbst (entspricht
+       dem früheren filter: saturate(1.2)). Ein Filter auf dem bewegten
+       Element zwingt den Browser, das riesige Textband in jedem Frame
+       neu zu zeichnen — genau daran sind schwache Geräte hängen
+       geblieben. */
     background-image: linear-gradient(
         100deg,
-        #f0c64a 0%,
-        #e08a2e 14%,
-        #c94a2c 28%,
-        #a03050 42%,
-        #6a3a9a 56%,
-        #2f66a8 72%,
-        #3a9ab2 86%,
-        #4fae5a 100%
+        #f8c631 0%,
+        #ef8819 14%,
+        #dd4521 28%,
+        #b12b51 42%,
+        #7037aa 56%,
+        #2567b7 72%,
+        #2b9ebb 86%,
+        #41b34e 100%
     );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
     opacity: 1;
-    filter: saturate(1.2);
-    will-change: transform;
     animation: marquee-ltr 32s linear infinite;
 }
 
 .scroll-marquee-row--rtl .scroll-marquee-track {
     animation: marquee-rtl 36s linear infinite;
+}
+
+/* will-change nur, solange das Band wirklich sichtbar ist. Dauerhaft
+   gesetzt hält es alle sechs Bänder gleichzeitig als GPU-Ebene im
+   Speicher — auf Geräten mit wenig RAM gibt der Browser das Compositing
+   dann auf und die Animation fällt zurück auf den Main-Thread. */
+.scroll-marquee-track:not(.is-offscreen) {
+    will-change: transform;
+}
+
+.scroll-marquee-track.is-offscreen {
+    animation-play-state: paused;
 }
 
 .scroll-marquee-track span {
@@ -2021,6 +2064,13 @@ img { max-width: 100%; display: block; }
     100% { filter: saturate(1.2)  brightness(1); }
 }
 
+/* Flackern nur bei sichtbaren Überschriften. Die Filter-Animation
+   zeichnet den Verlaufstext in jedem Frame neu — sechsmal parallel
+   im Hintergrund ist das auf schwachen Geräten der halbe Main-Thread. */
+.glass-text.is-offscreen {
+    animation-play-state: paused;
+}
+
 
 /* ============================================================
    RENAISSANCE TYPOGRAPHY — only on display headings
@@ -2881,15 +2931,35 @@ img { max-width: 100%; display: block; }
    ============================================================ */
 
 /* Cursor-follow light — desktop hero only, injected via JS.
-   Sits between grain (z:2) and hero content (z:3). */
+   Sits between grain (z:2) and hero content (z:3).
+   Fest große Fläche mit unveränderlichem Verlauf, bewegt per
+   transform. Vorher baute das Skript in jedem Frame einen neuen,
+   bildschirmfüllenden Radial-Gradient — zusammen mit dem
+   mix-blend-mode ergab das eine komplette Neuberechnung des Hero
+   bei jeder Mausbewegung. */
 .hero-cursor-light {
+    --light-size: 1100px;
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: var(--light-size);
+    height: var(--light-size);
+    margin-left: calc(var(--light-size) / -2);
+    margin-top: calc(var(--light-size) / -2);
+    transform: translate3d(50vw, 50vh, 0);
     z-index: 2;
     pointer-events: none;
     opacity: 0;
     transition: opacity 800ms var(--ease-out);
     mix-blend-mode: screen;
+    background: radial-gradient(
+        circle closest-side at 50% 50%,
+        rgba(212, 160, 49, 0.07) 0%,
+        rgba(180, 120, 60, 0.04) 30%,
+        rgba(140, 80, 40, 0.02) 50%,
+        transparent 70%
+    );
+    will-change: transform;
 }
 
 /* Progressive image loading — fade in when decoded */
@@ -3492,4 +3562,51 @@ body.intro-active {
 .exkurse-title,
 .book-title {
     font-family: var(--font-heading);
+}
+
+
+/* ============================================================
+   PERFORMANCE-STUFE — schwache Geräte
+   main.js setzt data-perf="low" auf <html>, wenn das Gerät wenig
+   Kerne/Speicher meldet oder die gemessene Bildrate einbricht.
+   Grundsatz: Bewegung bleibt, teure Malarbeit fällt weg.
+   Was hier abgeschaltet wird, sind ausschließlich Effekte, die
+   Fläche neu zeichnen oder mischen (Blur, Blend, Korn, Filter) —
+   die Laufbänder und das Buntglas laufen weiter.
+   ============================================================ */
+
+/* Verlaufstext ohne Dauer-Flackern */
+[data-perf="low"] .glass-text {
+    animation: none;
+}
+
+/* Filmkorn über dem Hero: eine bildschirmfüllende Textur, die bei
+   jedem Repaint mitgemischt wird */
+[data-perf="low"] .hero-grain {
+    display: none;
+}
+
+/* backdrop-filter ist auf schwachen GPUs mit Abstand der teuerste
+   Effekt — deckende Flächen sehen fast gleich aus */
+[data-perf="low"] .site-nav.is-scrolled,
+[data-perf="low"] .site-nav--essay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(10, 15, 13, 0.97);
+}
+
+[data-perf="low"] .nav-links {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* Kleineres Buntglas-Fenster = kleinere Ebene */
+[data-perf="low"] .hero-stained-glass {
+    --glass-size: 760px;
+}
+
+/* Intro-Buntglas: 16px-Blur auf einem großen Bild plus Dauer-Drift */
+[data-perf="low"] .intro-stainedglass {
+    filter: brightness(1.05) saturate(1.3);
+    animation: none;
 }

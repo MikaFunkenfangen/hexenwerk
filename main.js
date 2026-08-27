@@ -19,6 +19,74 @@
     const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
     const IS_MOBILE = window.matchMedia('(max-width: 640px)').matches;
 
+    /* -------- Performance-Stufe --------
+       Schwache Geraete melden wenig Kerne bzw. wenig Speicher. Wo der
+       Browser diese Werte nicht liefert, misst eine kurze Bildraten-
+       Probe nach dem Laden die tatsaechliche Leistung.
+       LOW_PERF schaltet ausschliesslich teure Malarbeit ab (Blur,
+       Blend, Korn, Parallax) — Bewegung bleibt in jedem Fall. */
+    const HW_CORES = navigator.hardwareConcurrency || 8;
+    const HW_MEMORY = navigator.deviceMemory || 8;
+    let LOW_PERF = HW_CORES <= 4 || HW_MEMORY <= 4;
+
+    function applyPerfTier() {
+        document.documentElement.setAttribute('data-perf', LOW_PERF ? 'low' : 'high');
+    }
+    applyPerfTier();
+
+    /* Bildraten-Probe: laeuft einmal, waehrend die Seite bereits
+       animiert, und stuft herunter, wenn die Bildrate einbricht. */
+    function initPerfProbe() {
+        if (LOW_PERF || REDUCED_MOTION) return;
+
+        let frames = 0;
+        let start = 0;
+        let ticks = 0;
+
+        function tick(now) {
+            // Sicherung, damit die Probe unter keinen Umstaenden
+            // dauerhaft mitlaeuft
+            if (++ticks > 400) return;
+            if (document.hidden) { start = 0; frames = 0; }
+            if (!start) { start = now; frames = 0; }
+            frames++;
+            const elapsed = now - start;
+            if (elapsed < 1500) {
+                requestAnimationFrame(tick);
+                return;
+            }
+            const fps = (frames * 1000) / elapsed;
+            if (fps < 45) {
+                LOW_PERF = true;
+                applyPerfTier();
+            }
+        }
+
+        // Erst messen, wenn der Ladesturm vorbei ist
+        window.setTimeout(() => requestAnimationFrame(tick), 1200);
+    }
+
+    /* -------- Animationen ausserhalb des Sichtfelds anhalten --------
+       Die Laufbaender und die Verlaufs-Ueberschriften sind sehr grosse,
+       farbverlaufsgefuellte Textebenen. Alle gleichzeitig zu animieren
+       kostet dauerhaft Rechenzeit, auch wenn nichts davon zu sehen ist.
+       Auf schwachen Geraeten laeuft der Main-Thread dadurch voll und
+       die CSS-Animationen bleiben sichtbar stehen. */
+    function initAnimationPausing() {
+        if (!('IntersectionObserver' in window)) return;
+
+        const targets = document.querySelectorAll('.scroll-marquee-track, .glass-text');
+        if (!targets.length) return;
+
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                entry.target.classList.toggle('is-offscreen', !entry.isIntersecting);
+            });
+        }, { rootMargin: '150px 0px' });
+
+        targets.forEach((el) => io.observe(el));
+    }
+
 
     /* ============================================================
        INITIAL SCROLL POSITION — Startseite immer beim Header beginnen
@@ -94,7 +162,7 @@
        instant scroll-tied position. Coefficient: 0.15 (subtle).
        ============================================================ */
     function initParallax() {
-        if (REDUCED_MOTION || IS_MOBILE) return;
+        if (REDUCED_MOTION || IS_MOBILE || LOW_PERF) return;
 
         const targets = [
             document.getElementById('heroBg'),
@@ -120,21 +188,56 @@
             });
         }
 
+        /* Stop-Token: Die Schleife laeuft nur, solange sich die Ebenen
+           noch auf ihr Ziel zubewegen. Vorher lief sie ununterbrochen
+           weiter und schrieb in jedem Frame Inline-Styles, auch wenn
+           gar nicht gescrollt wurde. */
+        let rafId = null;
+
         function animate() {
+            let moving = false;
+
             state.forEach(s => {
+                const delta = s.target - s.current;
+                if (Math.abs(delta) > 0.05) moving = true;
                 // Lerp towards target for smoothness
-                s.current += (s.target - s.current) * 0.1;
+                s.current += delta * 0.1;
                 // Round to avoid sub-pixel blur
                 const y = Math.round(s.current * 100) / 100;
                 s.el.style.transform = `translate3d(0, ${y}px, 0)`;
             });
-            requestAnimationFrame(animate);
+
+            if (!moving || document.hidden) {
+                rafId = null;
+                return;
+            }
+            rafId = requestAnimationFrame(animate);
         }
 
-        window.addEventListener('scroll', updateTargets, { passive: true });
-        window.addEventListener('resize', updateTargets, { passive: true });
+        function start() {
+            if (rafId !== null || document.hidden) return;
+            rafId = requestAnimationFrame(animate);
+        }
+
+        function onScroll() {
+            updateTargets();
+            start();
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (rafId !== null) cancelAnimationFrame(rafId);
+                rafId = null;
+            } else {
+                start();
+            }
+        });
+
         updateTargets();
-        animate();
+        start();
     }
 
 
@@ -218,92 +321,198 @@
         if (REDUCED_MOTION) return;
 
         const hero = document.querySelector('.hero');
-        const glass = document.querySelector('.hero-stained-glass');
         if (!hero) return;
 
-        // Warm light overlay (desktop only)
+        const glass = hero.querySelector('.hero-stained-glass');
+        const glassWindow = hero.querySelector('.stained-glass-window');
+        const glassImg = hero.querySelector('.stained-glass-img');
+
+        // Warmes Streulicht — nur Desktop, nur auf leistungsfaehigen Geraeten.
+        // Es liegt im mix-blend-mode: screen und ist damit der teuerste
+        // Einzeleffekt im Hero.
         let light = null;
-        if (!IS_TOUCH) {
+        if (!IS_TOUCH && !LOW_PERF) {
             light = document.createElement('div');
             light.className = 'hero-cursor-light';
             hero.appendChild(light);
         }
 
-        let currentX = 50, currentY = 50;
-        let targetX = 50, targetY = 50;
+        if (!light && !glassWindow) return;
+
+        // Positionen in Pixeln relativ zum Hero
+        let rect = hero.getBoundingClientRect();
+        let currentX = 0;
+        let currentY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        let glassRadius = glassWindow ? glassWindow.offsetWidth / 2 : 0;
+        let hasPointed = false;
+
+        function measure() {
+            const next = hero.getBoundingClientRect();
+            // Solange der Hero noch keine Masse hat (Layout laeuft noch,
+            // Intro-Overlay aktiv), lieber gar nichts schreiben — sonst
+            // bekommt das Bild eine Breite von 0 und verschwindet.
+            if (!next.width || !next.height) return;
+            rect = next;
+            if (glassWindow) glassRadius = glassWindow.offsetWidth / 2;
+            // Das Bild im Fenster braucht die Masse des Hero, damit es
+            // trotz Gegenbewegung deckungsgleich mit dem Hintergrund bleibt.
+            if (glass) {
+                glass.style.setProperty('--hero-w', rect.width + 'px');
+                glass.style.setProperty('--hero-h', rect.height + 'px');
+            }
+            // Solange noch niemand gezeigt hat, sitzt das Fenster mittig.
+            // Beim ersten Aufruf steht der Hero je nach Ladezustand noch
+            // ohne Masse da — deshalb wird bis zur ersten Zeigerbewegung
+            // bei jeder Messung neu zentriert.
+            if (!hasPointed) {
+                currentX = targetX = rect.width / 2;
+                currentY = targetY = rect.height / 2;
+            }
+        }
+        measure();
+
+        function apply() {
+            const x = Math.round(currentX * 10) / 10;
+            const y = Math.round(currentY * 10) / 10;
+
+            if (light) {
+                light.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0)';
+            }
+
+            if (glassWindow) {
+                // Fenster nach vorn, Bild um denselben Betrag zurueck:
+                // die Maske bleibt statisch, bewegt wird nur die Ebene.
+                glassWindow.style.transform =
+                    'translate3d(' + x + 'px, ' + y + 'px, 0)';
+                if (glassImg) {
+                    glassImg.style.transform =
+                        'translate3d(' + (glassRadius - x) + 'px, ' +
+                        (glassRadius - y) + 'px, 0)';
+                }
+            }
+        }
+        apply();
+
+        /* rAF-Schleife mit Stop-Token: sie laeuft nur, solange sich
+           wirklich etwas bewegt, und haelt an, sobald der Tab in den
+           Hintergrund geht. */
+        let rafId = null;
         let active = false;
 
-        // --- Desktop: mouse events ---
-        hero.addEventListener('mouseenter', () => {
+        function step() {
+            const dx = targetX - currentX;
+            const dy = targetY - currentY;
+            currentX += dx * 0.12;
+            currentY += dy * 0.12;
+            apply();
+
+            if (document.hidden || (Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4)) {
+                rafId = null;
+                return;
+            }
+            rafId = requestAnimationFrame(step);
+        }
+
+        function start() {
+            if (rafId !== null || document.hidden) return;
+            rafId = requestAnimationFrame(step);
+        }
+
+        function stop() {
+            if (rafId !== null) cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+
+        function setTargetFromPoint(clientX, clientY) {
+            hasPointed = true;
+            targetX = clientX - rect.left;
+            targetY = clientY - rect.top;
+            start();
+        }
+
+        function show() {
             active = true;
             if (light) light.style.opacity = '1';
             if (glass) glass.classList.add('is-active');
-        });
+        }
 
-        hero.addEventListener('mouseleave', () => {
+        function hide() {
             active = false;
             if (light) light.style.opacity = '0';
             if (glass) glass.classList.remove('is-active');
+        }
+
+        // --- Desktop: Maus ---
+        hero.addEventListener('mouseenter', (e) => {
+            measure();
+            show();
+            setTargetFromPoint(e.clientX, e.clientY);
         });
+
+        hero.addEventListener('mouseleave', hide);
 
         hero.addEventListener('mousemove', (e) => {
-            const rect = hero.getBoundingClientRect();
-            targetX = ((e.clientX - rect.left) / rect.width) * 100;
-            targetY = ((e.clientY - rect.top) / rect.height) * 100;
-        });
+            setTargetFromPoint(e.clientX, e.clientY);
+        }, { passive: true });
 
-        // --- Mobile: touch events ---
+        // --- Touch ---
+        let touchTimer = null;
         hero.addEventListener('touchstart', (e) => {
-            active = true;
-            if (glass) glass.classList.add('is-active');
+            if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
+            measure();
+            show();
             const touch = e.touches[0];
-            const rect = hero.getBoundingClientRect();
-            targetX = ((touch.clientX - rect.left) / rect.width) * 100;
-            targetY = ((touch.clientY - rect.top) / rect.height) * 100;
+            // Ohne Anlauf direkt an den Finger setzen
+            currentX = touch.clientX - rect.left;
+            currentY = touch.clientY - rect.top;
+            setTargetFromPoint(touch.clientX, touch.clientY);
         }, { passive: true });
 
         hero.addEventListener('touchmove', (e) => {
             const touch = e.touches[0];
-            const rect = hero.getBoundingClientRect();
-            targetX = ((touch.clientX - rect.left) / rect.width) * 100;
-            targetY = ((touch.clientY - rect.top) / rect.height) * 100;
+            setTargetFromPoint(touch.clientX, touch.clientY);
         }, { passive: true });
 
         hero.addEventListener('touchend', () => {
-            // Keep visible for a moment, then fade
-            setTimeout(() => {
-                active = false;
-                if (glass) glass.classList.remove('is-active');
+            touchTimer = setTimeout(() => {
+                touchTimer = null;
+                hide();
             }, 1500);
+        }, { passive: true });
+
+        window.addEventListener('resize', () => {
+            measure();
+            apply();
+        }, { passive: true });
+
+        window.addEventListener('load', () => {
+            measure();
+            apply();
         });
 
-        function animate() {
-            if (active) {
-                currentX += (targetX - currentX) * 0.08;
-                currentY += (targetY - currentY) * 0.08;
+        /* Beim Scrollen wandert der Hero unter dem Zeiger weg, die
+           gespeicherten Masse stimmen dann nicht mehr. Neu gemessen wird
+           aber nur, solange der Effekt ueberhaupt sichtbar ist, und
+           hoechstens einmal pro Frame — getBoundingClientRect erzwingt
+           sonst bei jedem einzelnen Scroll-Ereignis eine Neuberechnung
+           des Layouts. */
+        let scrollPending = false;
+        window.addEventListener('scroll', () => {
+            if (!active || scrollPending) return;
+            scrollPending = true;
+            requestAnimationFrame(() => {
+                scrollPending = false;
+                measure();
+                apply();
+            });
+        }, { passive: true });
 
-                // Warm light spill
-                if (light) {
-                    light.style.background = `
-                        radial-gradient(
-                            circle 550px at ${currentX}% ${currentY}%,
-                            rgba(212, 160, 49, 0.07) 0%,
-                            rgba(180, 120, 60, 0.04) 30%,
-                            rgba(140, 80, 40, 0.02) 50%,
-                            transparent 70%
-                        )
-                    `;
-                }
-
-                // Move stained glass mask
-                if (glass) {
-                    glass.style.setProperty('--glass-x', `${currentX}%`);
-                    glass.style.setProperty('--glass-y', `${currentY}%`);
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-        animate();
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stop();
+            else if (active) start();
+        });
     }
 
 
@@ -314,7 +523,7 @@
        Creates "living image" feel without zoom effects.
        ============================================================ */
     function initImageBreathing() {
-        if (REDUCED_MOTION) return;
+        if (REDUCED_MOTION || LOW_PERF) return;
 
         const images = document.querySelectorAll('.essay-fullbleed-img');
         if (!images.length) return;
@@ -765,7 +974,9 @@
             field.canvas.style.width = rect.width + 'px';
             field.canvas.style.height = rect.height + 'px';
             field.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            const density = Math.min(70, Math.max(20, Math.floor((rect.width * rect.height) / 14000)));
+            const maxDensity = LOW_PERF ? 26 : 70;
+            const area = LOW_PERF ? 30000 : 14000;
+            const density = Math.min(maxDensity, Math.max(12, Math.floor((rect.width * rect.height) / area)));
             field.particles = Array.from({ length: density }, () => spawnParticle(field, true));
         }
 
@@ -866,7 +1077,7 @@
        Creates a <span> from data-section-number attribute.
        ============================================================ */
     function initSectionNumbers() {
-        if (REDUCED_MOTION) return;
+        if (REDUCED_MOTION || LOW_PERF) return;
 
         const sections = document.querySelectorAll('[data-section-number]');
         if (!sections.length) return;
@@ -896,13 +1107,31 @@
             ticking = false;
         }
 
+        /* Stop-Token wie beim Parallax: anhalten, sobald die Zahlen
+           ihre Zielposition erreicht haben oder der Tab verdeckt ist. */
+        let rafId = null;
+
         function animate() {
+            let moving = false;
+
             state.forEach(s => {
-                s.current += (s.target - s.current) * 0.06;
+                const delta = s.target - s.current;
+                if (Math.abs(delta) > 0.05) moving = true;
+                s.current += delta * 0.06;
                 const y = Math.round(s.current * 10) / 10;
                 s.el.style.transform = `translate3d(0, ${y}px, 0)`;
             });
-            requestAnimationFrame(animate);
+
+            if (!moving || document.hidden) {
+                rafId = null;
+                return;
+            }
+            rafId = requestAnimationFrame(animate);
+        }
+
+        function start() {
+            if (rafId !== null || document.hidden) return;
+            rafId = requestAnimationFrame(animate);
         }
 
         window.addEventListener('scroll', () => {
@@ -910,10 +1139,20 @@
                 requestAnimationFrame(update);
                 ticking = true;
             }
+            start();
         }, { passive: true });
 
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (rafId !== null) cancelAnimationFrame(rafId);
+                rafId = null;
+            } else {
+                start();
+            }
+        });
+
         update();
-        animate();
+        start();
     }
 
 
@@ -1142,6 +1381,7 @@
        INIT
        ============================================================ */
     document.addEventListener('DOMContentLoaded', () => {
+        initAnimationPausing();
         initHeroSplitText();
         initReveals();
         initParallax();
@@ -1161,6 +1401,7 @@
         initScrollEffects();
         initFocusBackdrop();
         initWordScrub();
+        initPerfProbe();
     });
 
 })();

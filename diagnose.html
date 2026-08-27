@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Diagnose — Hexenwerk</title>
+<style>
+    :root { color-scheme: dark; }
+    body {
+        margin: 0;
+        padding: 2rem 1.25rem 4rem;
+        background: #0a0f0d;
+        color: #e8e4df;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        line-height: 1.55;
+        font-size: 16px;
+    }
+    h1 { font-size: 1.35rem; margin: 0 0 0.25rem; font-weight: 600; }
+    p.lead { margin: 0 0 2rem; color: #9aa39d; font-size: 0.92rem; }
+    h2 { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+         color: #d4a031; margin: 2rem 0 0.6rem; font-weight: 600; }
+    dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 1rem; }
+    dt { color: #9aa39d; font-size: 0.9rem; }
+    dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .ok   { color: #6fc47a; }
+    .warn { color: #e0a83a; }
+    .bad  { color: #e0674a; }
+    .band { margin-top: 0.75rem; overflow: hidden; border: 1px solid #23302b;
+            border-radius: 4px; background: #0e1512; }
+    .band-track { display: inline-block; white-space: nowrap; font-size: 2rem;
+                  padding: 0.4rem 0; color: #d4a031;
+                  animation: band 6s linear infinite; }
+    @keyframes band { from { transform: translate3d(0,0,0); }
+                        to { transform: translate3d(-50%,0,0); } }
+    @media (prefers-reduced-motion: reduce) { .band-track { animation: none; } }
+    .note { margin-top: 2.5rem; padding: 0.9rem 1rem; border-left: 2px solid #d4a031;
+            background: #0e1512; font-size: 0.88rem; color: #b9c1bb; }
+    a { color: #d4a031; }
+</style>
+</head>
+<body>
+
+<h1>Diagnose</h1>
+<p class="lead">Diese Seite prüft, warum Effekte auf diesem Gerät stehen bleiben.
+Einfach kurz offen lassen und die Werte ablesen.</p>
+
+<h2>Bewegung</h2>
+<dl>
+    <dt>Bewegung reduzieren (Systemeinstellung)</dt><dd id="rm">–</dd>
+    <dt>Testband bewegt sich</dt><dd id="bandState">messe …</dd>
+</dl>
+<div class="band" aria-hidden="true">
+    <span class="band-track" id="bandTrack">SCHWELLE · RITUAL · STIMME · SCHWELLE · RITUAL · STIMME · </span>
+</div>
+
+<h2>Leistung</h2>
+<dl>
+    <dt>Bildrate (gemessen)</dt><dd id="fps">messe …</dd>
+    <dt>Stufe der Website</dt><dd id="tier">–</dd>
+    <dt>Prozessorkerne</dt><dd id="cores">–</dd>
+    <dt>Arbeitsspeicher (gemeldet)</dt><dd id="mem">–</dd>
+</dl>
+
+<h2>Grafik-Fähigkeiten</h2>
+<dl>
+    <dt>mask-image</dt><dd id="mask">–</dd>
+    <dt>backdrop-filter</dt><dd id="bdf">–</dd>
+    <dt>background-clip: text</dt><dd id="bct">–</dd>
+    <dt>mix-blend-mode</dt><dd id="mbm">–</dd>
+</dl>
+
+<h2>Gerät</h2>
+<dl>
+    <dt>Fenster</dt><dd id="vp">–</dd>
+    <dt>Pixeldichte</dt><dd id="dpr">–</dd>
+    <dt>Zeigegerät</dt><dd id="pointer">–</dd>
+</dl>
+<p style="margin-top:1rem;color:#6d7873;font-size:0.75rem;word-break:break-all;" id="ua"></p>
+
+<div class="note">
+    <strong>Kurz gelesen:</strong> Steht oben <em>Bewegung reduzieren: an</em>,
+    dann schaltet das Betriebssystem die Animationen ab — nicht die Website.
+    Das lässt sich in den Systemeinstellungen ändern
+    (Windows: Einstellungen → Barrierefreiheit → Visuelle Effekte → Animationseffekte;
+    Android: Energiesparmodus aus; iOS/macOS: Bedienungshilfen → Bewegung reduzieren).
+    Liegt die Bildrate unter 45, greift die reduzierte Effektstufe der Website.
+</div>
+
+<script>
+(function () {
+    function set(id, text, cls) {
+        var el = document.getElementById(id);
+        el.textContent = text;
+        if (cls) el.className = cls;
+    }
+    function supports(prop, value) {
+        return (window.CSS && CSS.supports)
+            ? (CSS.supports(prop, value) || CSS.supports('-webkit-' + prop, value))
+            : false;
+    }
+    function yesNo(ok) { return ok ? 'unterstützt' : 'fehlt'; }
+
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    set('rm', reduced ? 'AN — Animationen aus' : 'aus', reduced ? 'bad' : 'ok');
+
+    var cores = navigator.hardwareConcurrency;
+    set('cores', cores ? cores : 'nicht gemeldet', cores && cores <= 4 ? 'warn' : '');
+    var mem = navigator.deviceMemory;
+    set('mem', mem ? mem + ' GB' : 'nicht gemeldet', mem && mem <= 4 ? 'warn' : '');
+
+    set('mask', yesNo(supports('mask-image', 'radial-gradient(circle, #000, transparent)')),
+        supports('mask-image', 'radial-gradient(circle, #000, transparent)') ? 'ok' : 'bad');
+    set('bdf', yesNo(supports('backdrop-filter', 'blur(4px)')),
+        supports('backdrop-filter', 'blur(4px)') ? 'ok' : 'warn');
+    set('bct', yesNo(supports('background-clip', 'text')),
+        supports('background-clip', 'text') ? 'ok' : 'bad');
+    set('mbm', yesNo(supports('mix-blend-mode', 'screen')),
+        supports('mix-blend-mode', 'screen') ? 'ok' : 'warn');
+
+    set('vp', window.innerWidth + ' × ' + window.innerHeight + ' px');
+    set('dpr', (window.devicePixelRatio || 1).toFixed(2) + '×');
+    set('pointer', window.matchMedia('(pointer: fine)').matches ? 'Maus / Trackpad' : 'Touch / grob');
+    document.getElementById('ua').textContent = navigator.userAgent;
+
+    // Bildrate messen
+    var frames = 0, start = 0, done = false;
+
+    // Notfall: Wenn der Browser gar keine Bilder liefert (Tab im
+    // Hintergrund, Energiesparmodus), nach 5 s trotzdem etwas zeigen.
+    setTimeout(function () {
+        if (done) return;
+        done = true;
+        set('fps', frames < 2 ? 'keine Bilder gezeichnet' : 'unter 10 Bilder/s', 'bad');
+        set('tier', 'reduziert (low)', 'warn');
+    }, 5000);
+
+    function tick(now) {
+        if (done) return;
+        if (!start) start = now;
+        frames++;
+        var elapsed = now - start;
+        if (elapsed < 2000) { requestAnimationFrame(tick); return; }
+        done = true;
+        var fps = Math.round((frames * 1000) / elapsed);
+        set('fps', fps + ' Bilder/s', fps >= 50 ? 'ok' : (fps >= 30 ? 'warn' : 'bad'));
+        var low = fps < 45 || (cores && cores <= 4) || (mem && mem <= 4);
+        set('tier', low ? 'reduziert (low)' : 'voll (high)', low ? 'warn' : 'ok');
+    }
+    requestAnimationFrame(tick);
+
+    // Läuft die CSS-Animation wirklich?
+    var track = document.getElementById('bandTrack');
+    var first = null;
+    function readX() {
+        var t = getComputedStyle(track).transform;
+        if (!t || t === 'none') return 0;
+        var m = t.match(/matrix.*\((.+)\)/);
+        if (!m) return 0;
+        var parts = m[1].split(',');
+        return parseFloat(parts.length > 6 ? parts[12] : parts[4]) || 0;
+    }
+    setTimeout(function () { first = readX(); }, 200);
+    setTimeout(function () {
+        var moved = Math.abs(readX() - first) > 1;
+        set('bandState', moved ? 'ja' : 'NEIN — steht still', moved ? 'ok' : 'bad');
+    }, 1600);
+})();
+</script>
+
+</body>
+</html>
