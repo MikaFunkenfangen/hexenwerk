@@ -306,12 +306,57 @@ img { max-width: 100%; display: block; }
     z-index: 1;
     overflow: hidden;
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 1s var(--ease-out);
 }
 
-.hero-stained-glass.is-active {
-    opacity: 1;
+/* Grundschicht: liegt immer im Header, unabhängig von Maus, Finger
+   oder Skript. Zur Mitte hin nimmt die Maske sie fast ganz zurück,
+   damit der Titel ruhig bleibt; nach außen trägt sie die Farbe.
+   Ein statisches Bild mit statischer Maske — der Browser zeichnet das
+   einmal und rührt es danach nicht mehr an. */
+.stained-glass-base {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: center 30%;
+    opacity: 0.38;
+    filter: brightness(0.92) saturate(1.1);
+    -webkit-mask-image: radial-gradient(
+        ellipse 76% 64% at 50% 42%,
+        rgba(0,0,0,0.08) 0%,
+        rgba(0,0,0,0.22) 38%,
+        rgba(0,0,0,0.62) 70%,
+        rgba(0,0,0,0.95) 100%
+    );
+    mask-image: radial-gradient(
+        ellipse 76% 64% at 50% 42%,
+        rgba(0,0,0,0.08) 0%,
+        rgba(0,0,0,0.22) 38%,
+        rgba(0,0,0,0.62) 70%,
+        rgba(0,0,0,0.95) 100%
+    );
+}
+
+/* Verlauf über der Grundschicht: nimmt sie oben zurück, damit die
+   Navigation ruhig bleibt, und führt sie unten in den Seitenhintergrund
+   über — sonst schneidet das Buntglas hart in die nächste Sektion.
+   Liegt bewusst unter dem Cursor-Fenster, damit der Lichtfleck weiter
+   ungedämpft durchkommt. */
+.stained-glass-fade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(10, 15, 13, 0.6) 0%,
+        rgba(10, 15, 13, 0.12) 13%,
+        rgba(10, 15, 13, 0) 28%,
+        rgba(10, 15, 13, 0) 64%,
+        rgba(10, 15, 13, 0.22) 82%,
+        rgba(10, 15, 13, 0.8) 95%,
+        var(--bg-deep) 100%
+    );
 }
 
 .stained-glass-window {
@@ -324,6 +369,8 @@ img { max-width: 100%; display: block; }
     margin-top: calc(var(--glass-size) / -2);
     /* Startposition: Bildmitte — JS übernimmt ab dem ersten Zeiger */
     transform: translate3d(50vw, 50vh, 0);
+    opacity: 0;
+    transition: opacity 1s var(--ease-out);
     -webkit-mask-image: radial-gradient(
         circle closest-side at 50% 50%,
         rgba(0,0,0,1) 0%,
@@ -359,6 +406,10 @@ img { max-width: 100%; display: block; }
         calc(var(--glass-size) / 2 - 50vh),
         0
     );
+}
+
+.hero-stained-glass.is-active .stained-glass-window {
+    opacity: 1;
 }
 
 /* GPU-Ebenen erst anlegen, wenn das Fenster wirklich leuchtet. Die
@@ -3102,6 +3153,14 @@ body.intro-active {
 
 .intro-overlay[data-state="active"] .intro-stainedglass {
     opacity: 0.3;
+}
+
+/* <picture> ist ein Inline-Element ohne eigene Masse — das Bild
+   darin braucht einen Block-Container in voller Groesse. */
+.intro-stainedglass picture {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .intro-stainedglass img {

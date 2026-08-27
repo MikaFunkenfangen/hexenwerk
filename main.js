@@ -773,7 +773,11 @@
                     const t0 = performance.now();
                     (function vol(now) {
                         if (ended) return;
-                        const pr = Math.min(1, (now - t0) / 3000);
+                        // requestAnimationFrame liefert den Startzeitpunkt des
+                        // Frames — der kann minimal VOR t0 liegen. Ohne untere
+                        // Grenze wird die Lautstaerke dann negativ und der
+                        // Browser wirft einen IndexSizeError.
+                        const pr = Math.min(1, Math.max(0, (now - t0) / 3000));
                         audio.volume = pr * 0.85;
                         if (pr < 1) requestAnimationFrame(vol);
                     })(performance.now());
@@ -820,7 +824,7 @@
                 (function step(now) {
                     if (!audio || !audio.isConnected) return;
                     const p = Math.min(1, (now - t0) / 900);
-                    audio.volume = Math.max(0, start * (1 - p));
+                    audio.volume = Math.min(1, Math.max(0, start * (1 - p)));
                     if (p < 1) requestAnimationFrame(step);
                     else stopAudioCompletely();
                 })(performance.now());
@@ -844,7 +848,8 @@
                         const t0 = performance.now();
                         (function vol(now) {
                             if (ended) return;
-                            const pr = Math.min(1, (now - t0) / 4000);
+                            // Untergrenze wie oben — sonst IndexSizeError
+                            const pr = Math.min(1, Math.max(0, (now - t0) / 4000));
                             audio.volume = pr * 0.85;
                             if (pr < 1) requestAnimationFrame(vol);
                         })(performance.now());
