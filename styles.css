@@ -272,7 +272,11 @@ img { max-width: 100%; display: block; }
 .hero-overlay {
     position: absolute;
     inset: 0;
-    z-index: 1;
+    /* z-index 0 statt 1: Über dem Hintergrund liegt sie schon durch die
+       Reihenfolge im Dokument. Die Buntglas-Ebene darüber kommt damit
+       ohne eigenen z-index aus — und ohne z-index kapselt sie das
+       Mischen ihrer Kinder nicht ab. */
+    z-index: 0;
     background:
         radial-gradient(
             ellipse 80% 60% at 50% 45%,
@@ -299,20 +303,23 @@ img { max-width: 100%; display: block; }
    und schiebt pro Frame nur noch fertige Ebenen. Vorher wurde die
    Maske bildschirmfüllend in jedem Frame neu gezeichnet, was
    schwache Geräte komplett ausgebremst hat. */
+/* Licht statt Foto: Im Screen-Modus verschwinden die dunklen Stellen des
+   Bildes — also das schwarze Bleiglas-Gerüst — im dunklen Grund, und nur
+   die farbigen Scheiben leuchten heraus. Dadurch trägt schon eine
+   niedrige Deckkraft, und der Header bleibt trotzdem ruhig.
+   Der Mischmodus sitzt auf den beiden Bild-Ebenen, nicht auf dieser
+   Hülle: Läge er auf der Gruppe, müsste der Browser bei jeder
+   Zeigerbewegung die komplette Header-Fläche neu mischen. So mischt die
+   ruhende Grundschicht einmal, und pro Frame nur noch der Lichtfleck in
+   seinen eigenen Maßen.
+   Der Verlauf liegt außerhalb: Screen kann nur aufhellen, ein Abdunkeln
+   wäre darin wirkungslos. */
 .hero-stained-glass {
     --glass-size: 1100px;
     position: absolute;
     inset: 0;
-    z-index: 1;
     overflow: hidden;
     pointer-events: none;
-    /* Licht statt Foto: Im Screen-Modus verschwinden die dunklen Stellen
-       des Bildes — also das schwarze Bleiglas-Gerüst — im dunklen Grund,
-       und nur die farbigen Scheiben leuchten heraus. Dadurch trägt schon
-       eine niedrige Deckkraft, und der Header bleibt trotzdem ruhig.
-       Der Verlauf liegt bewusst außerhalb dieser Gruppe: Screen kann nur
-       aufhellen, ein Abdunkeln wäre darin wirkungslos. */
-    mix-blend-mode: screen;
 }
 
 /* Grundschicht: liegt immer im Header, unabhängig von Maus, Finger
@@ -323,6 +330,7 @@ img { max-width: 100%; display: block; }
 .stained-glass-base {
     position: absolute;
     inset: 0;
+    mix-blend-mode: screen;
     width: 100%;
     height: 100%;
     max-width: none;
@@ -372,6 +380,7 @@ img { max-width: 100%; display: block; }
     position: absolute;
     top: 0;
     left: 0;
+    mix-blend-mode: screen;
     width: var(--glass-size);
     height: var(--glass-size);
     margin-left: calc(var(--glass-size) / -2);
@@ -409,7 +418,9 @@ img { max-width: 100%; display: block; }
     max-width: none;
     object-fit: cover;
     object-position: center 30%;
-    filter: brightness(1.05) saturate(1.15);
+    /* Bewusst ohne filter: Diese Ebene wandert mit dem Zeiger, ein Filter
+       darauf müsste in jedem Frame neu gerechnet werden. Die Aufhellung
+       übernimmt der Screen-Modus ohnehin. */
     transform: translate3d(
         calc(var(--glass-size) / 2 - 50vw),
         calc(var(--glass-size) / 2 - 50vh),
@@ -1756,10 +1767,8 @@ img { max-width: 100%; display: block; }
     --glass-size: 640px;
     position: absolute;
     inset: 0;
-    z-index: 0;
     overflow: hidden;
     pointer-events: none;
-    mix-blend-mode: screen;
 }
 
 .page-hero-glass .stained-glass-base {
@@ -3071,10 +3080,14 @@ img { max-width: 100%; display: block; }
     pointer-events: none;
     opacity: 0;
     transition: opacity 800ms var(--ease-out);
-    mix-blend-mode: screen;
+    /* Kein mix-blend-mode: Screen hätte den Hintergrund unter dieser
+       Fläche in jedem Frame neu einlesen und verrechnen müssen. Bei
+       Deckkräften um 0.07 über fast schwarzem Grund ist das Ergebnis von
+       normalem Überlagern praktisch nicht zu unterscheiden — es kostet
+       nur. */
     background: radial-gradient(
         circle closest-side at 50% 50%,
-        rgba(212, 160, 49, 0.07) 0%,
+        rgba(212, 160, 49, 0.075) 0%,
         rgba(180, 120, 60, 0.04) 30%,
         rgba(140, 80, 40, 0.02) 50%,
         transparent 70%

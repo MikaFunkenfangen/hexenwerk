@@ -418,13 +418,14 @@
         let rafId = null;
         let active = false;
         let idleTimer = null;
+        let lastFrame = 0;
         // Rohe Zeigerkoordinaten, erst im naechsten Frame verrechnet.
         let pendingX = null;
         let pendingY = null;
 
         const IDLE_MS = 1200;
 
-        function step() {
+        function step(now) {
             if (pendingX !== null) {
                 hasPointed = true;
                 targetX = pendingX - rect.left;
@@ -441,10 +442,20 @@
                 return;
             }
 
+            /* Nachziehen an die vergangene Zeit koppeln, nicht an die
+               Anzahl der Frames. Mit festem Faktor pro Frame kriecht das
+               Fenster bei 40 Bildern/s spuerbar langsamer hinterher als
+               bei 60 — und ungleichmaessige Frames wirken dann als
+               Ruckeln, obwohl gar keins da ist. Gedeckelt auf vier
+               Frames, damit es nach einer Pause nicht springt. */
+            const elapsed = lastFrame ? Math.min(64, now - lastFrame) : 16.7;
+            lastFrame = now;
+            const ease = 1 - Math.pow(1 - 0.12, elapsed / 16.7);
+
             const dx = targetX - currentX;
             const dy = targetY - currentY;
-            currentX += dx * 0.12;
-            currentY += dy * 0.12;
+            currentX += dx * ease;
+            currentY += dy * ease;
             apply();
 
             if (document.hidden || (Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4)) {
@@ -456,6 +467,7 @@
 
         function start() {
             if (rafId !== null || document.hidden) return;
+            lastFrame = 0;
             rafId = requestAnimationFrame(step);
         }
 
@@ -495,14 +507,20 @@
             io.observe(hero);
         }
 
-        /* Zweite Absicherung: Manche Umgebungen liefern die Meldungen des
-           Observers verzögert oder gar nicht. Deshalb zusätzlich messen —
-           aber höchstens fünfmal pro Sekunde, damit daraus keine
-           Layout-Berechnung pro Mausbewegung wird. */
+        /* Im Zeigerpfad wird kein Layout gelesen. getBoundingClientRect
+           zwingt den Browser, das Layout sofort neu zu berechnen — mitten
+           im Eingabe-Handler, also genau bevor der naechste Frame gezeichnet
+           wird. Das war als Ruckeln zu spueren.
+           Die Antwort kommt jetzt allein vom Observer; die Masse selbst
+           halten resize, load und der auf einen Frame gedrosselte
+           Scroll-Handler aktuell. Nur wo es keinen Observer gibt, wird
+           ersatzweise gemessen — hoechstens fuenfmal pro Sekunde. */
+        const HAS_IO = 'IntersectionObserver' in window;
         let lastMeasure = 0;
 
         function headerInView() {
-            if (!inView) return false;
+            if (HAS_IO) return inView;
+
             const now = performance.now();
             if (now - lastMeasure > 200) {
                 lastMeasure = now;
