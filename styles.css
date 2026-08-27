@@ -688,8 +688,23 @@ img { max-width: 100%; display: block; }
     to   { transform: translate3d(0, 0, 0); }
 }
 
+/* Bei reduzierter Bewegung laufen die Bänder weiter, aber in gut einem
+   Drittel des Tempos. Ganz anhalten war die reine Lehre — auf günstigen
+   Geräten schaltet aber der Energiesparmodus diese Einstellung ein, ohne
+   dass jemand sie bewusst gewählt hätte, und dort standen die Bänder
+   dann einfach still. Ein langsames, gleichmäßiges Wandern löst kein
+   Schwindelgefühl aus, ein Zucken oder Blinken wäre etwas anderes.
+   Die !important sind nötig, weil der Sammel-Riegel weiter unten allen
+   Elementen animation-duration und -iteration-count überschreibt. */
 @media (prefers-reduced-motion: reduce) {
-    .scroll-marquee-track { animation: none; }
+    .scroll-marquee-track {
+        animation-duration: 96s !important;
+        animation-iteration-count: infinite !important;
+    }
+
+    .scroll-marquee-row--rtl .scroll-marquee-track {
+        animation-duration: 112s !important;
+    }
 }
 
 

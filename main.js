@@ -318,7 +318,14 @@
        Opacity capped at 0.08.
        ============================================================ */
     function initCursorLight() {
-        if (REDUCED_MOTION) return;
+        /* Kein Riegel bei prefers-reduced-motion: Das Buntglas folgt dem
+           Zeiger, es läuft nicht von selbst los. Wer die Einstellung setzt,
+           will keine Animation ohne sein Zutun — nicht ein totes Bild.
+           Bei reduzierter Bewegung springt das Fenster deshalb direkt an
+           die Zeigerposition, statt weich nachzuziehen.
+           Vorher stieg diese Funktion hier komplett aus. Auf günstigen
+           Geräten ist der Energiesparmodus meist an, und der meldet genau
+           diese Einstellung — dort blieb das Fenster deshalb starr. */
 
         // Startseite mit warmem Streulicht, die Unterseiten-Header nur mit
         // dem Buntglas-Fenster — dort ist der Header flacher und soll ruhig
@@ -410,8 +417,30 @@
            Hintergrund geht. */
         let rafId = null;
         let active = false;
+        let idleTimer = null;
+        // Rohe Zeigerkoordinaten, erst im naechsten Frame verrechnet.
+        let pendingX = null;
+        let pendingY = null;
+
+        const IDLE_MS = 1200;
 
         function step() {
+            if (pendingX !== null) {
+                hasPointed = true;
+                targetX = pendingX - rect.left;
+                targetY = pendingY - rect.top;
+                pendingX = pendingY = null;
+            }
+
+            // Bei reduzierter Bewegung ohne Nachziehen direkt setzen
+            if (REDUCED_MOTION) {
+                currentX = targetX;
+                currentY = targetY;
+                apply();
+                rafId = null;
+                return;
+            }
+
             const dx = targetX - currentX;
             const dy = targetY - currentY;
             currentX += dx * 0.12;
@@ -435,13 +464,6 @@
             rafId = null;
         }
 
-        function setTargetFromPoint(clientX, clientY) {
-            hasPointed = true;
-            targetX = clientX - rect.left;
-            targetY = clientY - rect.top;
-            start();
-        }
-
         function show() {
             active = true;
             if (light) light.style.opacity = '1';
@@ -454,42 +476,81 @@
             if (glass) glass.classList.remove('is-active');
         }
 
-        // --- Desktop: Maus ---
-        hero.addEventListener('mouseenter', (e) => {
-            measure();
+        /* Ob der Header ueberhaupt zu sehen ist, beantwortet ein
+           IntersectionObserver. Die Alternative waere, bei jedem
+           Zeiger-Ereignis die Position neu zu messen — eine Layout-
+           Berechnung pro Mausbewegung, genau das, was schwache Geraete
+           in die Knie zwingt. Der Observer meldet sich von selbst und
+           kostet im Betrieb nichts. */
+        let inView = true;
+        if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+                inView = entries[entries.length - 1].isIntersecting;
+                if (!inView) {
+                    if (idleTimer) clearTimeout(idleTimer);
+                    hide();
+                    stop();
+                }
+            });
+            io.observe(hero);
+        }
+
+        /* Zweite Absicherung: Manche Umgebungen liefern die Meldungen des
+           Observers verzögert oder gar nicht. Deshalb zusätzlich messen —
+           aber höchstens fünfmal pro Sekunde, damit daraus keine
+           Layout-Berechnung pro Mausbewegung wird. */
+        let lastMeasure = 0;
+
+        function headerInView() {
+            if (!inView) return false;
+            const now = performance.now();
+            if (now - lastMeasure > 200) {
+                lastMeasure = now;
+                measure();
+            }
+            return rect.bottom > 0 && rect.top < window.innerHeight;
+        }
+
+        /* Die Zeiger-Ereignisse haengen am window, nicht am Header. Auf dem
+           Telefon wischt man zum Scrollen irgendwo ueber die Seite und nicht
+           gezielt ueber den Header — laege der Horchposten nur dort, bliebe
+           das Fenster stehen. Genau so wirkte es "nur statisch".
+           Die Handler lesen kein Layout, sie merken sich nur die Koordinaten;
+           umgerechnet wird einmal pro Frame in step(). */
+        function queuePoint(clientX, clientY) {
+            if (!headerInView()) return;
+            pendingX = clientX;
+            pendingY = clientY;
             show();
-            setTargetFromPoint(e.clientX, e.clientY);
-        });
+            if (idleTimer) clearTimeout(idleTimer);
+            idleTimer = setTimeout(hide, IDLE_MS);
+            start();
+        }
 
-        hero.addEventListener('mouseleave', hide);
-
-        hero.addEventListener('mousemove', (e) => {
-            setTargetFromPoint(e.clientX, e.clientY);
+        window.addEventListener('pointermove', (e) => {
+            queuePoint(e.clientX, e.clientY);
         }, { passive: true });
 
-        // --- Touch ---
-        let touchTimer = null;
-        hero.addEventListener('touchstart', (e) => {
-            if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
-            measure();
-            show();
+        // Fallback fuer Browser ohne Pointer Events
+        if (!window.PointerEvent) {
+            window.addEventListener('mousemove', (e) => {
+                queuePoint(e.clientX, e.clientY);
+            }, { passive: true });
+        }
+
+        window.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
+            if (!touch || !headerInView()) return;
             // Ohne Anlauf direkt an den Finger setzen
+            hasPointed = true;
             currentX = touch.clientX - rect.left;
             currentY = touch.clientY - rect.top;
-            setTargetFromPoint(touch.clientX, touch.clientY);
+            queuePoint(touch.clientX, touch.clientY);
         }, { passive: true });
 
-        hero.addEventListener('touchmove', (e) => {
+        window.addEventListener('touchmove', (e) => {
             const touch = e.touches[0];
-            setTargetFromPoint(touch.clientX, touch.clientY);
-        }, { passive: true });
-
-        hero.addEventListener('touchend', () => {
-            touchTimer = setTimeout(() => {
-                touchTimer = null;
-                hide();
-            }, 1500);
+            if (touch) queuePoint(touch.clientX, touch.clientY);
         }, { passive: true });
 
         window.addEventListener('resize', () => {
@@ -502,20 +563,21 @@
             apply();
         });
 
-        /* Beim Scrollen wandert der Hero unter dem Zeiger weg, die
-           gespeicherten Masse stimmen dann nicht mehr. Neu gemessen wird
-           aber nur, solange der Effekt ueberhaupt sichtbar ist, und
-           hoechstens einmal pro Frame — getBoundingClientRect erzwingt
-           sonst bei jedem einzelnen Scroll-Ereignis eine Neuberechnung
-           des Layouts. */
+        /* Beim Scrollen wandert der Header unter dem Zeiger weg — die
+           gespeicherten Masse stimmen dann nicht mehr, und headerInView()
+           bräuchte sonst bei jedem Zeiger-Ereignis eine eigene Messung.
+           Deshalb hier einmal pro Frame nachmessen: getBoundingClientRect
+           erzwingt eine Layout-Berechnung, ungedrosselt bei jedem einzelnen
+           Scroll-Ereignis wäre das genau die Bremse, die wir loswerden
+           wollten. */
         let scrollPending = false;
         window.addEventListener('scroll', () => {
-            if (!active || scrollPending) return;
+            if (scrollPending) return;
             scrollPending = true;
             requestAnimationFrame(() => {
                 scrollPending = false;
                 measure();
-                apply();
+                if (active) apply();
             });
         }, { passive: true });
 
