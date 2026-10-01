@@ -367,9 +367,9 @@
 
         function measure() {
             const next = hero.getBoundingClientRect();
-            // Solange der Hero noch keine Masse hat (Layout laeuft noch,
-            // Intro-Overlay aktiv), lieber gar nichts schreiben — sonst
-            // bekommt das Bild eine Breite von 0 und verschwindet.
+            // Solange der Hero noch keine Masse hat (das Layout laeuft
+            // noch), lieber gar nichts schreiben — sonst bekommt das Bild
+            // eine Breite von 0 und verschwindet.
             if (!next.width || !next.height) return;
             rect = next;
             if (glassWindow) glassRadius = glassWindow.offsetWidth / 2;
@@ -802,205 +802,6 @@
         // Marquees now run on a CSS keyframe animation (marquee-ltr / marquee-rtl).
         // This stub is kept in case we later want JS-driven behaviour
         // (e.g. pause-on-hover, reduced-motion toggles, etc.).
-    }
-
-
-    /* ============================================================
-       10b. INTRO OVERLAY — art-house Eingangssequenz (30s)
-       Choreographie:
-         0.5s  : Overlay aktiviert — Buntglas/Sonne/Corona erscheinen, Skip sichtbar
-         1-12s : Lade-Prozent 0 → 100 %, Mond wandert über die Sonne (Eclipse 0→1)
-         10s   : Audio blendet ein (startet bei 01:10 des Songs)
-         12s   : Logo-Video startet und fadet ein
-         20s   : Willkommens-Titel fadet ein
-         28s   : Overlay + Audio faden aus
-         30s   : Overlay aus dem DOM-Fluss, body.intro-active entfernt
-       ============================================================ */
-    function initIntroOverlay() {
-        const overlay = document.getElementById('introOverlay');
-        if (!overlay) return;
-
-        // Bei reduced-motion komplett überspringen
-        if (REDUCED_MOTION) {
-            overlay.remove();
-            return;
-        }
-
-        // Wenn die Seite mit einem Anchor geladen wurde (z.B. #titelgeschichten
-        // via Nav-Link), das Intro überspringen. Nur der reine Seitenstart
-        // (ohne Hash) oder die explizite Rubrik #intro spielt die Sequenz.
-        const hash = window.location.hash;
-        if (hash && hash !== '#intro') {
-            overlay.remove();
-            return;
-        }
-
-        document.body.classList.add('intro-active');
-
-        const percentEl = document.getElementById('introPercent');
-        const logo = document.getElementById('introLogo');
-        const audio = document.getElementById('introMusic');
-        const skipBtn = document.getElementById('introSkip');
-        const enterBtn = document.getElementById('introEnter');
-
-        let ended = false;
-        const timers = [];
-        let rafLoad = null;
-
-        function schedule(fn, delay) {
-            timers.push(setTimeout(fn, delay));
-        }
-
-        // Unlock-Listener für geblocktes Autoplay; nur auf dem Overlay
-        // registriert und wieder abgebaut, damit Audio NIE auf der
-        // Hauptseite weiterläuft, wenn das Intro schon vorbei ist.
-        let unlockHandler = null;
-        function attachUnlock() {
-            if (!audio || ended || unlockHandler) return;
-            unlockHandler = () => {
-                if (ended || !audio) return;
-                audio.play().then(() => {
-                    const t0 = performance.now();
-                    (function vol(now) {
-                        if (ended) return;
-                        // requestAnimationFrame liefert den Startzeitpunkt des
-                        // Frames — der kann minimal VOR t0 liegen. Ohne untere
-                        // Grenze wird die Lautstaerke dann negativ und der
-                        // Browser wirft einen IndexSizeError.
-                        const pr = Math.min(1, Math.max(0, (now - t0) / 3000));
-                        audio.volume = pr * 0.85;
-                        if (pr < 1) requestAnimationFrame(vol);
-                    })(performance.now());
-                }).catch(() => {});
-                detachUnlock();
-            };
-            overlay.addEventListener('pointerdown', unlockHandler, { passive: true });
-            overlay.addEventListener('touchstart', unlockHandler, { passive: true });
-        }
-        function detachUnlock() {
-            if (!unlockHandler) return;
-            overlay.removeEventListener('pointerdown', unlockHandler);
-            overlay.removeEventListener('touchstart', unlockHandler);
-            unlockHandler = null;
-        }
-
-        function stopAudioCompletely() {
-            if (!audio) return;
-            try {
-                audio.pause();
-                audio.currentTime = 0;
-                audio.src = '';
-                audio.removeAttribute('src');
-                audio.load();
-                audio.remove();
-            } catch (_) { /* ignore */ }
-        }
-
-        function endIntro() {
-            if (ended) return;
-            ended = true;
-            // Erst alle ausstehenden Intro-Timer canceln, DANN neue Cleanup-Timer starten
-            timers.forEach(clearTimeout);
-            timers.length = 0;
-            if (rafLoad) cancelAnimationFrame(rafLoad);
-
-            overlay.setAttribute('data-state', 'hidden');
-            detachUnlock();
-
-            // Audio sanft ausblenden und dann komplett abbrechen
-            if (audio) {
-                const start = audio.volume;
-                const t0 = performance.now();
-                (function step(now) {
-                    if (!audio || !audio.isConnected) return;
-                    const p = Math.min(1, (now - t0) / 900);
-                    audio.volume = Math.min(1, Math.max(0, start * (1 - p)));
-                    if (p < 1) requestAnimationFrame(step);
-                    else stopAudioCompletely();
-                })(performance.now());
-            }
-
-            setTimeout(() => {
-                stopAudioCompletely();  // defensive
-                overlay.remove();
-                document.body.classList.remove('intro-active');
-            }, 1400);
-        }
-
-        function startAudioWithFade() {
-            if (!audio || ended) return;
-            try {
-                audio.currentTime = 70;
-                audio.volume = 0;
-                const p = audio.play();
-                if (p && p.then) {
-                    p.then(() => {
-                        const t0 = performance.now();
-                        (function vol(now) {
-                            if (ended) return;
-                            // Untergrenze wie oben — sonst IndexSizeError
-                            const pr = Math.min(1, Math.max(0, (now - t0) / 4000));
-                            audio.volume = pr * 0.85;
-                            if (pr < 1) requestAnimationFrame(vol);
-                        })(performance.now());
-                    }).catch(() => {
-                        // Autoplay blockiert — warte auf Tap/Click innerhalb des Intro-Overlays
-                        attachUnlock();
-                    });
-                }
-            } catch (_) { /* ignore */ }
-        }
-
-        skipBtn && skipBtn.addEventListener('click', endIntro);
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape' && !ended) endIntro();
-        });
-
-        // Overlay vorab sichtbar machen (Logo + Buntglas + Eintreten-Button)
-        overlay.setAttribute('data-state', 'active');
-        if (logo) overlay.setAttribute('data-logo-in', '');
-
-        let started = false;
-        function startIntroSequence() {
-            if (started || ended) return;
-            started = true;
-            overlay.setAttribute('data-started', '');
-
-            // Audio sofort starten — wir sind im User-Gesture-Kontext
-            startAudioWithFade();
-
-            // Loading-Counter über 22s
-            const loadStart = performance.now() + 200;
-            const loadDur   = 22000;
-            (function loadTick(now) {
-                if (ended) return;
-                const t = Math.max(0, Math.min(1, (now - loadStart) / loadDur));
-                if (percentEl) percentEl.textContent = Math.round(t * 100);
-                if (t < 1) rafLoad = requestAnimationFrame(loadTick);
-            })(performance.now());
-
-            // Willkommen kommt früh (4.5s) und bleibt bis zum Ende sichtbar
-            schedule(() => overlay.setAttribute('data-welcome-in', ''), 4500);
-
-            // Ende — das gesamte Overlay fadet aus, Logo und Willkommen
-            // verschwinden synchron über die Overlay-Opacity
-            schedule(endIntro, 24000);
-        }
-
-        if (enterBtn) enterBtn.addEventListener('click', startIntroSequence, { once: true });
-
-        // Falls der Nutzer den Eintreten-Button ignoriert: nach 15s einfach
-        // ohne Musik weiterlaufen lassen (Safety).
-        setTimeout(() => { if (!started && !ended) startIntroSequence(); }, 15000);
-
-        // Safety-Net: nach spätestens 45 Sekunden ist das Intro weg,
-        // unabhängig vom Zustand der Timeline.
-        setTimeout(() => {
-            if (!ended) endIntro();
-            document.body.classList.remove('intro-active');
-            const o = document.getElementById('introOverlay');
-            if (o) o.remove();
-        }, 45000);
     }
 
 
@@ -1488,7 +1289,6 @@
         initImageLoading();
         initNavToggle();
         initNavLogoToTop();
-        initIntroOverlay();
         initScrollMarquee();
         initParticleFields();
         initCardSpotlight();
